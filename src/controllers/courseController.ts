@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Op } from 'sequelize';
 import Course from '../models/Course';
 import ApiResponse from '../utils/apiResponse';
 import {
@@ -10,7 +11,7 @@ import {
 } from '../types/express';
 
 const CourseController = {
-  // List all courses (with pagination)
+  // List all courses (with pagination and search)
   getAllCourses: async (
     req: CourseListRequest,
     res: Response
@@ -18,9 +19,18 @@ const CourseController = {
     try {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
+      const search = req.query.search ?? '';
       const offset = (page - 1) * limit;
 
+      const whereClause = search ? {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${search}%` } },
+          { description: { [Op.iLike]: `%${search}%` } }
+        ]
+      } : {};
+
       const { count, rows: courses } = await Course.findAndCountAll({
+        where: whereClause,
         limit,
         offset,
         order: [['createdAt', 'DESC']]

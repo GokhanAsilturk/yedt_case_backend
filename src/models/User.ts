@@ -1,66 +1,66 @@
-import { DataTypes } from 'sequelize';
-import bcrypt from 'bcryptjs';
+import { DataTypes, Model, CreationOptional } from 'sequelize';
+import * as bcrypt from 'bcryptjs';
 import sequelize from '../config/database';
-import { UserModel } from '../types/models';
 
-const User = sequelize.define<UserModel>(
-  'User',
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true
-    },
-    username: {
-      type: DataTypes.STRING,
-      unique: true,
-      allowNull: false
-    },
-    email: {
-      type: DataTypes.STRING,
-      unique: true,
-      allowNull: false,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    role: {
-      type: DataTypes.ENUM('admin', 'student'),
-      allowNull: false
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    }
-  },
-  {
-    tableName: 'Users'
-  }
-);
+class User extends Model {
+  declare id: CreationOptional<string>;
+  declare username: string;
+  declare email: string;
+  declare password: string;
+  declare role: 'admin' | 'student';
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 
-// Hash password before saving
-User.beforeCreate(async (user: UserModel) => {
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
-});
-
-// Add instance methods
-const instanceMethods = {
-  async validatePassword(this: UserModel, password: string): Promise<boolean> {
+  async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
   }
-};
+}
 
-Object.assign(User.prototype, instanceMethods);
+User.init({
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
+  username: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+    validate: {
+      isEmail: true
+    }
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  role: {
+    type: DataTypes.ENUM('admin', 'student'),
+    allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  sequelize,
+  modelName: 'User',
+  tableName: 'Users'
+});
+
+User.beforeCreate(async (user: User) => {
+  user.password = await bcrypt.hash(user.password, 10);
+});
 
 export default User;

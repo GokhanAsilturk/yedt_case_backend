@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Op } from 'sequelize';
 import Student from '../models/Student';
 import User from '../models/User';
 import ApiResponse from '../utils/apiResponse';
@@ -11,13 +12,25 @@ import {
 } from '../types/express';
 
 const StudentController = {
-  // List all students (with pagination)
-  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery>, res: Response): Promise<void> => { // Use PaginationQuery
-    try {      const page = parseInt(req.query.page ?? '1');
+  // List all students (with pagination and search)
+  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery>, res: Response): Promise<void> => {
+    try {
+      const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
+      const search = req.query.search ?? '';
       const offset = (page - 1) * limit;
 
+      const whereClause = search ? {
+        [Op.or]: [
+          { firstName: { [Op.iLike]: `%${search}%` } },
+          { lastName: { [Op.iLike]: `%${search}%` } },
+          { '$User.email$': { [Op.iLike]: `%${search}%` } },
+          { '$User.username$': { [Op.iLike]: `%${search}%` } }
+        ]
+      } : {};
+
       const { count, rows: students } = await Student.findAndCountAll({
+        where: whereClause,
         include: [
           {
             model: User,

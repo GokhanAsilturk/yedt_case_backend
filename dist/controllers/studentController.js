@@ -3,18 +3,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const sequelize_1 = require("sequelize");
 const Student_1 = __importDefault(require("../models/Student"));
 const User_1 = __importDefault(require("../models/User"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const StudentController = {
-    // List all students (with pagination)
+    // List all students (with pagination and search)
     getAllStudents: async (req, res) => {
-        var _a, _b;
+        var _a, _b, _c;
         try {
             const page = parseInt((_a = req.query.page) !== null && _a !== void 0 ? _a : '1');
             const limit = parseInt((_b = req.query.limit) !== null && _b !== void 0 ? _b : '10');
+            const search = (_c = req.query.search) !== null && _c !== void 0 ? _c : '';
             const offset = (page - 1) * limit;
+            const whereClause = search ? {
+                [sequelize_1.Op.or]: [
+                    { firstName: { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { lastName: { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$User.email$': { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$User.username$': { [sequelize_1.Op.iLike]: `%${search}%` } }
+                ]
+            } : {};
             const { count, rows: students } = await Student_1.default.findAndCountAll({
+                where: whereClause,
                 include: [
                     {
                         model: User_1.default,

@@ -9,7 +9,15 @@ const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const swagger_1 = require("./config/swagger");
+const database_1 = __importDefault(require("./config/database"));
+require("./models"); // Import model associations
 dotenv_1.default.config();
+// Database sync
+database_1.default.sync({ force: false }).then(() => {
+    console.log('Database synchronized successfully');
+}).catch(err => {
+    console.error('Error syncing database:', err);
+});
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)());

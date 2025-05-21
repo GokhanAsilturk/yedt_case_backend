@@ -3,16 +3,9 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { setupSwagger } from './config/swagger';
-import sequelize from './config/database';
+import './models'; // Import model associations
 
 dotenv.config();
-
-// Database sync
-sequelize.sync({ force: false }).then(() => {
-  console.log('Database synchronized successfully');
-}).catch(err => {
-  console.error('Error syncing database:', err);
-});
 
 const app = express();
 
@@ -54,9 +47,5 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 const PORT = process.env.PORT ?? 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
 
 export default app;

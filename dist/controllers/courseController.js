@@ -3,17 +3,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const sequelize_1 = require("sequelize");
 const Course_1 = __importDefault(require("../models/Course"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const CourseController = {
-    // List all courses (with pagination)
+    // List all courses (with pagination and search)
     getAllCourses: async (req, res) => {
-        var _a, _b;
+        var _a, _b, _c;
         try {
             const page = parseInt((_a = req.query.page) !== null && _a !== void 0 ? _a : '1');
             const limit = parseInt((_b = req.query.limit) !== null && _b !== void 0 ? _b : '10');
+            const search = (_c = req.query.search) !== null && _c !== void 0 ? _c : '';
             const offset = (page - 1) * limit;
+            const whereClause = search ? {
+                [sequelize_1.Op.or]: [
+                    { name: { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { description: { [sequelize_1.Op.iLike]: `%${search}%` } }
+                ]
+            } : {};
             const { count, rows: courses } = await Course_1.default.findAndCountAll({
+                where: whereClause,
                 limit,
                 offset,
                 order: [['createdAt', 'DESC']]
