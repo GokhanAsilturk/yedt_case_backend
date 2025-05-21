@@ -5,15 +5,16 @@ import User from '../models/User';
 import ApiResponse from '../utils/apiResponse';
 import {
   TypedRequest,
-  PaginationQuery, // Import PaginationQuery
-  IdParams, // Import IdParams
-  StudentCreateBody, // Import StudentCreateBody
-  StudentUpdateBody // Import StudentUpdateBody
+  PaginationQuery,
+  IdParams,
+  StudentCreateBody,
+  StudentUpdateBody,
+  SearchQuery // Import SearchQuery
 } from '../types/express';
 
 const StudentController = {
   // List all students (with pagination and search)
-  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery>, res: Response): Promise<void> => {
+  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response): Promise<void> => { // Use PaginationQuery and SearchQuery
     try {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
@@ -22,10 +23,10 @@ const StudentController = {
 
       const whereClause = search ? {
         [Op.or]: [
+          { '$user.username$': { [Op.iLike]: `%${search}%` } },
+          { '$user.email$': { [Op.iLike]: `%${search}%` } },
           { firstName: { [Op.iLike]: `%${search}%` } },
-          { lastName: { [Op.iLike]: `%${search}%` } },
-          { '$User.email$': { [Op.iLike]: `%${search}%` } },
-          { '$User.username$': { [Op.iLike]: `%${search}%` } }
+          { lastName: { [Op.iLike]: `%${search}%` } }
         ]
       } : {};
 
@@ -34,6 +35,7 @@ const StudentController = {
         include: [
           {
             model: User,
+            as: 'userAccount', // Use the correct alias
             attributes: ['username', 'email', 'role']
           }
         ],

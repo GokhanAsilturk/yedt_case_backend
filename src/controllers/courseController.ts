@@ -22,12 +22,15 @@ const CourseController = {
       const search = req.query.search ?? '';
       const offset = (page - 1) * limit;
 
-      const whereClause = search ? {
-        [Op.or]: [
-          { name: { [Op.iLike]: `%${search}%` } },
-          { description: { [Op.iLike]: `%${search}%` } }
-        ]
-      } : {};
+      const sanitizedSearch = typeof search === 'string' ? search.replace(/[%_]/g, '\\$&') : '';
+      const whereClause = sanitizedSearch
+        ? {
+            [Op.or]: [
+              { name: { [Op.like]: `%${sanitizedSearch}%` } },
+              { description: { [Op.like]: `%${sanitizedSearch}%` } }
+            ]
+          }
+        : {};
 
       const { count, rows: courses } = await Course.findAndCountAll({
         where: whereClause,

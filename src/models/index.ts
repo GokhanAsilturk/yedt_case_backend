@@ -2,6 +2,7 @@ import User from './User';
 import Student from './Student';
 import Course from './Course';
 import Enrollment from './Enrollment';
+import sequelize from '../config/database';
 
 // User - Student İlişkisi (One-to-One)
 User.hasOne(Student, {
@@ -48,4 +49,4 @@ Enrollment.belongsTo(Course, {
   as: 'enrolledCourse'
 });
 
-export { User, Student, Course, Enrollment };
+export { sequelize, User, Student, Course, Enrollment };

@@ -36,6 +36,10 @@ export interface PaginationQuery extends ParsedQs {
   limit?: string;
 }
 
+export interface SearchQuery extends ParsedQs {
+  search?: string;
+}
+
 export interface StudentCreateBody {
   username: string;
   email: string;
