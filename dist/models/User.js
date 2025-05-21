@@ -44,8 +44,7 @@ const User = database_1.default.define('User', {
         defaultValue: sequelize_1.DataTypes.NOW
     }
 }, {
-    tableName: 'Users',
-    modelName: 'User'
+    tableName: 'Users'
 });
 // Hash password before saving
 User.beforeCreate(async (user) => {

@@ -3,8 +3,16 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { setupSwagger } from './config/swagger';
+import sequelize from './config/database';
 
 dotenv.config();
+
+// Database sync
+sequelize.sync({ force: false }).then(() => {
+  console.log('Database synchronized successfully');
+}).catch(err => {
+  console.error('Error syncing database:', err);
+});
 
 const app = express();
 
