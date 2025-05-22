@@ -43,6 +43,80 @@ const EnrollmentController = {
     }
   },
 
+  // Enroll logged-in student to a course
+  enrollCourse: async (
+    req: TypedRequest<{ courseId: string }>,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const userId = (req as any).user.id;
+      const { courseId } = req.params;
+
+      const student = await Student.findOne({ where: { userId } });
+      if (!student) {
+        ApiResponse.error(res, 'Student not found', 404);
+        return;
+      }
+
+      const course = await Course.findByPk(courseId);
+      if (!course) {
+        ApiResponse.error(res, 'Course not found', 404);
+        return;
+      }
+
+      const existingEnrollment = await Enrollment.findOne({
+        where: { studentId: student.id, courseId }
+      });
+
+      if (existingEnrollment) {
+        ApiResponse.error(res, 'Already enrolled in this course', 400);
+        return;
+      }
+
+      const enrollment = await Enrollment.create({
+        studentId: student.id,
+        courseId,
+        enrollmentDate: new Date()
+      });
+
+      ApiResponse.success(res, enrollment, 'Enrolled successfully', 201);
+    } catch (error) {
+      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+    }
+  },
+
+  // Withdraw logged-in student from a course
+  withdrawCourse: async (
+    req: TypedRequest<{ courseId: string }>,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const userId = (req as any).user.id;
+      const { courseId } = req.params;
+
+      const student = await Student.findOne({ where: { userId } });
+      if (!student) {
+        ApiResponse.error(res, 'Student not found', 404);
+        return;
+      }
+
+      const enrollment = await Enrollment.findOne({
+        where: { studentId: student.id, courseId }
+      });
+
+      if (!enrollment) {
+        ApiResponse.error(res, 'Enrollment not found', 404);
+        return;
+      }
+
+      await enrollment.destroy();
+
+      ApiResponse.success(res, null, 'Withdrawn successfully');
+    } catch (error) {
+      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+    }
+  },
+
   getStudentEnrollments: async (
     req: TypedRequest<IdParams>,
     res: Response

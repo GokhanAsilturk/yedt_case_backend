@@ -9,8 +9,7 @@ const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const EnrollmentController = {
     // List all enrollments (with pagination)
-    getAllEnrollments: async (req, // Use PaginationQuery for query type
-    res) => {
+    getAllEnrollments: async (req, res) => {
         var _a, _b;
         try {
             const page = parseInt((_a = req.query.page) !== null && _a !== void 0 ? _a : '1');
@@ -37,9 +36,64 @@ const EnrollmentController = {
             apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
         }
     },
-    // Get student enrollments
-    getStudentEnrollments: async (req, // Use TypedRequest with IdParams
-    res) => {
+    // Enroll logged-in student to a course
+    enrollCourse: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const { courseId } = req.params;
+            const student = await Student_1.default.findOne({ where: { userId } });
+            if (!student) {
+                apiResponse_1.default.error(res, 'Student not found', 404);
+                return;
+            }
+            const course = await Course_1.default.findByPk(courseId);
+            if (!course) {
+                apiResponse_1.default.error(res, 'Course not found', 404);
+                return;
+            }
+            const existingEnrollment = await Enrollment_1.default.findOne({
+                where: { studentId: student.id, courseId }
+            });
+            if (existingEnrollment) {
+                apiResponse_1.default.error(res, 'Already enrolled in this course', 400);
+                return;
+            }
+            const enrollment = await Enrollment_1.default.create({
+                studentId: student.id,
+                courseId,
+                enrollmentDate: new Date()
+            });
+            apiResponse_1.default.success(res, enrollment, 'Enrolled successfully', 201);
+        }
+        catch (error) {
+            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+        }
+    },
+    // Withdraw logged-in student from a course
+    withdrawCourse: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const { courseId } = req.params;
+            const student = await Student_1.default.findOne({ where: { userId } });
+            if (!student) {
+                apiResponse_1.default.error(res, 'Student not found', 404);
+                return;
+            }
+            const enrollment = await Enrollment_1.default.findOne({
+                where: { studentId: student.id, courseId }
+            });
+            if (!enrollment) {
+                apiResponse_1.default.error(res, 'Enrollment not found', 404);
+                return;
+            }
+            await enrollment.destroy();
+            apiResponse_1.default.success(res, null, 'Withdrawn successfully');
+        }
+        catch (error) {
+            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+        }
+    },
+    getStudentEnrollments: async (req, res) => {
         try {
             const { id: studentId } = req.params;
             const enrollments = await Enrollment_1.default.findAll({

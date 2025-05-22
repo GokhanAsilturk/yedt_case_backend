@@ -2,6 +2,10 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express';
 import ApiResponse from '../utils/apiResponse';
+import { errorHandler, notFoundHandler, AppError, ErrorCode } from './errorHandler';
+import { validate, commonSchemas, ValidationSchema } from './validator';
+import { setupSecurityMiddleware, sqlInjectionProtection } from './security';
+import { auth, requirePermission, requireRoles, Permission, hasPermission } from './auth';
 
 export const checkRole = (roles: string[]) => {
   return async (
@@ -35,4 +39,19 @@ export const checkRole = (roles: string[]) => {
   };
 };
 
-export { auth } from './auth';
+export {
+  auth,
+  requirePermission,
+  requireRoles,
+  Permission,
+  hasPermission,
+  errorHandler,
+  notFoundHandler,
+  AppError,
+  ErrorCode,
+  validate,
+  commonSchemas,
+  ValidationSchema,
+  setupSecurityMiddleware,
+  sqlInjectionProtection
+};

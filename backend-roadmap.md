@@ -82,14 +82,14 @@ backend/
 - POST /api/auth/login - Kullanıcı girişi
 - POST /api/auth/logout - Çıkış işlemi
 
-### Öğrenci Yönetimi (Admin için)
+### Öğrenci Yönetimi
 - GET /api/students - Tüm öğrencileri listele (pagination destekli)
 - GET /api/students/:id - Tek bir öğrencinin detaylarını getir
 - POST /api/students - Yeni öğrenci ekle
 - PUT /api/students/:id - Öğrenci bilgilerini güncelle
 - DELETE /api/students/:id - Öğrenci kaydını sil
 
-### Ders Yönetimi (Admin için)
+### Ders Yönetimi
 - GET /api/courses - Tüm dersleri listele (pagination destekli)
 - GET /api/courses/:id - Tek bir dersin detaylarını getir
 - POST /api/courses - Yeni ders ekle
@@ -102,10 +102,3 @@ backend/
 - GET /api/courses/:id/students - Bir derse kayıtlı tüm öğrencileri getir
 - POST /api/enrollments - Yeni kayıt ekle (Admin veya öğrencinin kendisi için)
 - DELETE /api/enrollments/:id - Kayıt sil (Admin veya öğrencinin kendisi için)
-
-### Öğrenci API (Öğrenci kullanıcılar için)
-- GET /api/student/profile - Öğrenci profilini getir
-- PUT /api/student/profile - Öğrenci profilini güncelle
-- GET /api/student/courses - Öğrencinin kayıtlı olduğu dersleri getir
-- POST /api/student/courses/:courseId/enroll - Derse kaydol
-- DELETE /api/student/courses/:courseId/withdraw - Dersten çekil

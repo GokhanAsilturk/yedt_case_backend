@@ -1,0 +1,25 @@
+# Derleme ve geliştirme dosyaları
+node_modules
+npm-debug.log
+dist
+coverage
+.git
+.github
+.vscode
+.env
+.env.*
+*.log
+
+# Test dosyaları
+__tests__
+test
+tests
+*.test.ts
+*.spec.ts
+
+# Diğer
+.DS_Store
+.editorconfig
+README.md
+.gitignore
+*.md

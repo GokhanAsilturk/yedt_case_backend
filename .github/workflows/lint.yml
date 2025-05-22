@@ -1,0 +1,66 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Kontrolü
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+
+      - name: Node.js Kurulumu
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Bağımlılıkları Yükle
+        run: npm ci
+
+      - name: ESLint ile Kod Kalitesi Kontrolü
+        run: npm run lint
+        
+      - name: Prettier ile Kod Formatı Kontrolü
+        run: npm run format:check
+
+  type-check:
+    name: TypeScript Tür Kontrolü
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+
+      - name: Node.js Kurulumu
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Bağımlılıkları Yükle
+        run: npm ci
+
+      - name: TypeScript Tür Kontrolü
+        run: npm run type-check
+
+  dependency-review:
+    name: Bağımlılık Güvenlik Kontrolü
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+
+      - name: Bağımlılık İncelemesi
+        uses: actions/dependency-review-action@v2
+        with:
+          fail-on-severity: high

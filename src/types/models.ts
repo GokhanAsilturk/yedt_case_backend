@@ -7,6 +7,7 @@ export interface IUser {
   email: string;
   password: string;
   role: 'admin' | 'student';
+  tokenVersion?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +46,7 @@ export interface UserModel extends Model<InferAttributes<UserModel>, InferCreati
   email: string;
   password: string;
   role: 'admin' | 'student';
+  tokenVersion: CreationOptional<number>;
   createdAt: CreationOptional<Date>;
   updatedAt: CreationOptional<Date>;
   validatePassword(password: string): Promise<boolean>;
@@ -83,6 +85,7 @@ export interface UserCreateInput {
   email: string;
   password: string;
   role: 'admin' | 'student';
+  tokenVersion?: number;
 }
 
 export interface StudentCreateInput {

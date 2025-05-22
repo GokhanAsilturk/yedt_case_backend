@@ -5,6 +5,17 @@ import asyncHandler from '../utils/asyncHandler'; // Import the new asyncHandler
 
 const router = express.Router();
 
+router.post('/student/courses/:courseId/enroll',
+  auth,
+  asyncHandler(EnrollmentController.enrollCourse)
+);
+
+router.delete('/student/courses/:courseId/withdraw',
+  auth,
+  asyncHandler(EnrollmentController.withdrawCourse)
+);
+
+
 /**
  * @swagger
  * /api/enrollments:

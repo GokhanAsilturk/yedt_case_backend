@@ -1,17 +1,14 @@
 import User from '../models/User';
 import Student from '../models/Student';
-import * as bcrypt from 'bcryptjs';
 
 export const seedStudents = async (): Promise<void> => {
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('student123', salt);
 
     // Örnek öğrenci kullanıcısı oluştur
     const studentUser = await User.create({
       username: 'gokhanasilturk',
       email: 'gokhanasilturkk@gmail.com',
-      password: hashedPassword,
+      password: 'student123!', // Doğrudan şifreyi verelim, model içinde hashlenecek
       role: 'student'
     });
 

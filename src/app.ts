@@ -1,10 +1,16 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { setupSwagger } from './config/swagger';
 import { sequelize } from './config/database';
 import { runSeeders } from './seeders';
+import {
+  errorHandler,
+  notFoundHandler,
+  setupSecurityMiddleware,
+  sqlInjectionProtection
+} from './middleware';
 import './models';
 
 dotenv.config();
@@ -15,8 +21,15 @@ const initDatabase = async () => {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
     
-    // Run seeders
-    await runSeeders(sequelize);
+    // Veritabanı şemasını senkronize et (sadece değişiklikleri uygula, tabloları silmeden)
+    await sequelize.sync({ alter: true });
+    console.log('Database schema synchronized successfully.');
+    
+    // Run seeders (ilk çalıştırmada veya NODE_ENV=development ise)
+    const isDevEnvironment = process.env.NODE_ENV === 'development';
+    if (isDevEnvironment) {
+      await runSeeders(sequelize);
+    }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
@@ -26,10 +39,15 @@ initDatabase();
 
 const app = express();
 
-// Middleware
+// Temel Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Güvenlik Middleware'leri
+setupSecurityMiddleware(app);
+// SQL Injection koruması tekrar aktif
+app.use(sqlInjectionProtection);
 
 // Routes
 import authRoutes from './routes/auth';
@@ -50,18 +68,11 @@ app.use('/api/students', studentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 
-// Error handling middleware
-interface Error {
-  stack?: string;
-  message: string;
-  status?: number;
-}
+// 404 handler for undefined routes
+app.use(notFoundHandler);
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);  res.status(err.status ?? 500).json({ 
-    error: err.message ?? 'Something went wrong!' 
-  });
-});
+// Global error handling middleware
+app.use(errorHandler);
 
 const PORT = process.env.PORT ?? 5000;
 

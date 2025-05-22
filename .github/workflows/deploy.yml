@@ -1,0 +1,133 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main      # production
+      - develop   # staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Dağıtım yapılacak ortam'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+jobs:
+  prepare:
+    name: Dağıtım Hazırlığı
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-environment.outputs.environment }}
+      version: ${{ steps.set-version.outputs.version }}
+    
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Ortamı Belirle
+        id: set-environment
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          else
+            echo "environment=development" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Sürüm Numarasını Belirle
+        id: set-version
+        run: |
+          VERSION=$(git describe --tags --always || echo "v0.1.0-$(git rev-parse --short HEAD)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Sürüm: $VERSION"
+
+  deploy:
+    name: Dağıtım
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: ${{ needs.prepare.outputs.environment }}
+    
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+      
+      - name: Docker İmajını Çek
+        run: |
+          echo "İmajı çekiliyor: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}"
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker pull ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      
+      - name: Dağıtım Hazırlığı
+        id: prep
+        run: |
+          COLOR=$([ "${{ needs.prepare.outputs.environment }}_SLOT" == "blue" ] && echo "green" || echo "blue")
+          echo "deploy_color=$COLOR" >> $GITHUB_OUTPUT
+          echo "Dağıtım rengi: $COLOR"
+          echo "Ortam: ${{ needs.prepare.outputs.environment }}"
+          echo "Sürüm: ${{ needs.prepare.outputs.version }}"
+      
+      # Blue-Green Deployment
+      - name: Blue-Green Dağıtım
+        run: |
+          # Bu adımda normalde bir altyapı script'i veya CLI komutu çalıştırılır
+          echo "Blue-Green dağıtım gerçekleştiriliyor: ${{ steps.prep.outputs.deploy_color }} slotuna dağıtım"
+          echo "Ortam değişkenleri ${{ needs.prepare.outputs.environment }} için yapılandırılıyor"
+      
+      # Yeni slota dağıtım
+      - name: Dağıtım Uygula
+        run: |
+          # Burada, bir Kubernetes, Docker Swarm veya diğer bir container orkestrasyon 
+          # aracı kullanarak dağıtım gerçekleştirilir. Örnek olarak:
+          echo "kubectl apply -f ./k8s/${{ needs.prepare.outputs.environment }}/ --set version=${{ needs.prepare.outputs.version }} --set slot=${{ steps.prep.outputs.deploy_color }}"
+      
+      # Sistem sağlık kontrolü
+      - name: Sağlık Kontrolü
+        run: |
+          echo "Yeni dağıtım sağlık kontrolü yapılıyor..."
+          # Burada sağlık kontrolü için API endpoint'i kontrol edilir
+          # curl --retry 10 --retry-delay 5 https://api-${{ steps.prep.outputs.deploy_color }}.${{ needs.prepare.outputs.environment }}.example.com/health
+          sleep 5  # Örnek bekleme
+          echo "Sağlık kontrolü başarılı!"
+      
+      # Trafik Yönlendirme
+      - name: Trafik Yönlendirme
+        run: |
+          echo "Trafik yeni slota yönlendiriliyor: ${{ steps.prep.outputs.deploy_color }}"
+          # Burada trafik yönlendirme komutu çalıştırılır:
+          # kubectl patch ingress main-ingress -n ${{ needs.prepare.outputs.environment }} --type=json -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value":"api-${{ steps.prep.outputs.deploy_color }}"}]'
+      
+      # Dağıtım Doğrulama
+      - name: Dağıtım Doğrulama
+        run: |
+          echo "Dağıtım doğrulanıyor..."
+          # Burada dağıtım sonrası smoke testleri çalıştırılır
+          sleep 5  # Örnek bekleme
+          echo "Dağıtım doğrulaması başarılı!"
+      
+      # Rollback Hazırlığı
+      - name: Rollback Hazırlığı
+        run: |
+          echo "Rollback hazırlığı yapılıyor (gerekirse kullanılmak üzere)"
+          echo "Önceki slot: $([ "${{ steps.prep.outputs.deploy_color }}" == "blue" ] && echo "green" || echo "blue")"
+      
+      # Dağıtım Bildirimi
+      - name: Dağıtım Bildirimi
+        if: success()
+        run: |
+          echo "Dağıtım başarıyla tamamlandı:"
+          echo "  Ortam: ${{ needs.prepare.outputs.environment }}"
+          echo "  Sürüm: ${{ needs.prepare.outputs.version }}"
+          echo "  Slot: ${{ steps.prep.outputs.deploy_color }}"
+          
+          # Burada Slack, Teams veya e-posta bildirimi eklenebilir
+          # curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ ${{ needs.prepare.outputs.environment }} ortamına başarılı dağıtım: ${{ needs.prepare.outputs.version }}"}' ${{ secrets.SLACK_WEBHOOK_URL }}

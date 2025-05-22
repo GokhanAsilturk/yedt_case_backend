@@ -4,8 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
+const database_1 = require("../config/database");
 const Student_1 = __importDefault(require("../models/Student"));
 const User_1 = __importDefault(require("../models/User"));
+const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const StudentController = {
     // List all students (with pagination and search)
@@ -29,7 +31,7 @@ const StudentController = {
                 include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount', // Use the correct alias
+                        as: 'userAccount', // Updated alias to match model association
                         attributes: ['username', 'email', 'role']
                     }
                 ],
@@ -43,6 +45,51 @@ const StudentController = {
             apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
         }
     },
+    // Get profile of logged-in student
+    getProfile: async (req, res) => {
+        try {
+            const userId = req.user.id; // JWT'den user id alınır
+            const student = await Student_1.default.findOne({
+                where: { userId },
+                include: [
+                    {
+                        model: User_1.default,
+                        as: 'userAccount',
+                        attributes: ['username', 'email', 'role']
+                    }
+                ]
+            });
+            if (!student) {
+                apiResponse_1.default.error(res, 'Student profile not found', 404);
+                return;
+            }
+            apiResponse_1.default.success(res, student);
+        }
+        catch (error) {
+            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+        }
+    },
+    // Update profile of logged-in student
+    updateProfile: async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const { firstName, lastName, birthDate } = req.body;
+            const student = await Student_1.default.findOne({ where: { userId } });
+            if (!student) {
+                apiResponse_1.default.error(res, 'Student profile not found', 404);
+                return;
+            }
+            await student.update({
+                firstName,
+                lastName,
+                birthDate: birthDate ? new Date(birthDate) : undefined
+            });
+            apiResponse_1.default.success(res, student, 'Profile updated successfully');
+        }
+        catch (error) {
+            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+        }
+    },
     // Get student details by ID
     getStudentById: async (req, res) => {
         try {
@@ -50,6 +97,7 @@ const StudentController = {
                 include: [
                     {
                         model: User_1.default,
+                        as: 'userAccount', // Updated alias to match model association
                         attributes: ['username', 'email', 'role']
                     }
                 ]
@@ -116,12 +164,21 @@ const StudentController = {
                 apiResponse_1.default.error(res, 'Student not found', 404);
                 return;
             }
-            // Find and delete associated user
-            const user = await User_1.default.findByPk(student.userId);
-            if (user) {
-                await user.destroy();
-            }
-            await student.destroy();
+            // Transaction kullanarak silme işlemlerini gerçekleştir
+            await database_1.sequelize.transaction(async (t) => {
+                // Önce enrollment kayıtlarını sil
+                await Enrollment_1.default.destroy({
+                    where: { studentId: student.id },
+                    transaction: t
+                });
+                // Sonra öğrenciyi sil
+                await student.destroy({ transaction: t });
+                // En son user'ı sil
+                await User_1.default.destroy({
+                    where: { id: student.userId },
+                    transaction: t
+                });
+            });
             apiResponse_1.default.success(res, null, 'Student deleted successfully');
         }
         catch (error) {

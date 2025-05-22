@@ -16,6 +16,7 @@ interface ApiSuccessResponse<T> {
 interface ApiErrorResponse {
   success: false;
   message: string;
+  error?: any; // Hata detayları için opsiyonel alan
 }
 
 interface ApiPaginatedResponse<T> {
@@ -34,11 +35,16 @@ class ApiResponse {
     return res.status(statusCode).json(response);
   }
 
-  static error(res: Response, message: string = 'Internal Server Error', statusCode: number = 500): Response {
+  static error(res: Response, message: string = 'Internal Server Error', statusCode: number = 500, error?: any): Response {
     const response: ApiErrorResponse = {
       success: false,
       message
     };
+    
+    if (error) {
+      response.error = error;
+    }
+    
     return res.status(statusCode).json(response);
   }
 

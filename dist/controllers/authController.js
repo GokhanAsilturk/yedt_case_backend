@@ -12,7 +12,15 @@ class AuthController {
         try {
             const { username, password } = req.body;
             const user = await User_1.default.findOne({ where: { username } });
-            if (!user || !(await user.validatePassword(password))) {
+            console.log('Login attempt:', { username, providedPassword: password });
+            if (!user) {
+                console.log('User not found');
+                apiResponse_1.default.error(res, 'Invalid credentials', 401);
+                return;
+            }
+            const isValidPassword = await user.validatePassword(password);
+            console.log('Password validation:', { isValid: isValidPassword });
+            if (!isValidPassword) {
                 apiResponse_1.default.error(res, 'Invalid credentials', 401);
                 return;
             }

@@ -1,0 +1,81 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Testleri Çalıştır
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: education_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: education_test
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'test-jwt-secret' }}
+      JWT_EXPIRES_IN: 1h
+
+    steps:
+      - name: Kodu Kontrol Et
+        uses: actions/checkout@v3
+
+      - name: Node.js Kurulumu
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Bağımlılıkları Yükle
+        run: npm ci
+
+      - name: Birim Testleri Çalıştır
+        run: npm run test:unit -- --coverage
+
+      - name: Entegrasyon Testleri Çalıştır
+        run: npm run test:integration -- --coverage
+
+      - name: Test Coverage Raporu Oluştur
+        run: npm run test:coverage
+
+      - name: Jest Coverage Report'u Arşivle
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Test Başarısızlığında GitHub PR'a Yorum Ekle
+        uses: actions/github-script@v6
+        if: failure() && github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = context.issue.number;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: '❌ Test iş akışı başarısız oldu. Lütfen detaylar için [Actions sekmesine](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) bakın.'
+            });

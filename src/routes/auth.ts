@@ -1,7 +1,39 @@
 import express from 'express';
 import AuthController from '../controllers/authController';
+import { validate, commonSchemas } from '../middleware/index';
+import Joi from 'joi';
+import { auth } from '../middleware';
 
 const router = express.Router();
+
+// Validasyon şemaları
+const loginSchema = {
+  body: {
+    username: commonSchemas.username,
+    password: Joi.string().required().messages({
+      'any.required': 'Şifre alanı zorunludur.'
+    })
+  }
+};
+
+const registerSchema = {
+  body: {
+    username: commonSchemas.username,
+    email: commonSchemas.email,
+    password: commonSchemas.password,
+    role: Joi.string().valid('admin', 'student').default('student').messages({
+      'any.only': 'Rol sadece "admin" veya "student" olabilir.'
+    })
+  }
+};
+
+const refreshTokenSchema = {
+  body: {
+    refreshToken: Joi.string().required().messages({
+      'any.required': 'Refresh token alanı zorunludur.'
+    })
+  }
+};
 
 /**
  * @swagger
@@ -29,7 +61,7 @@ const router = express.Router();
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', AuthController.login);
+router.post('/login', validate(loginSchema), AuthController.login);
 
 /**
  * @swagger
@@ -64,6 +96,55 @@ router.post('/login', AuthController.login);
  *       400:
  *         description: Username or email already exists
  */
-router.post('/register', AuthController.register);
+router.post('/register', validate(registerSchema), AuthController.register);
+
+/**
+ * @swagger
+ * /api/auth/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: New access token generated
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh-token', validate(refreshTokenSchema), AuthController.refreshToken);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully logged out
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/logout', auth, AuthController.logout);
 
 export default router;

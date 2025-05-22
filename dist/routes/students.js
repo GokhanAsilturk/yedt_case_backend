@@ -8,6 +8,52 @@ const studentController_1 = __importDefault(require("../controllers/studentContr
 const middleware_1 = require("../middleware");
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler")); // Import the new asyncHandler
 const router = express_1.default.Router();
+// Öğrenci profilini getirme
+/**
+ * @swagger
+ * /api/student/profile:
+ *   get:
+ *     summary: Get logged-in student's profile
+ *     tags: [Student Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Student profile retrieved successfully
+ *       404:
+ *         description: Student profile not found
+ */
+router.get('/profile', middleware_1.auth, (0, asyncHandler_1.default)(studentController_1.default.getProfile));
+// Öğrenci profilini güncelleme
+/**
+ * @swagger
+ * /api/student/profile:
+ *   put:
+ *     summary: Update logged-in student's profile
+ *     tags: [Student Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Student profile updated successfully
+ *       404:
+ *         description: Student profile not found
+ */
+router.put('/profile', middleware_1.auth, (0, asyncHandler_1.default)(studentController_1.default.updateProfile));
 /**
  * @swagger
  * /api/students:
