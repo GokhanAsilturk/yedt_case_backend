@@ -3,9 +3,26 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { setupSwagger } from './config/swagger';
-import './models'; // Import model associations
+import { sequelize } from './config/database';
+import { runSeeders } from './seeders';
+import './models';
 
 dotenv.config();
+
+// Initialize database and run seeders
+const initDatabase = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+    
+    // Run seeders
+    await runSeeders(sequelize);
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+};
+
+initDatabase();
 
 const app = express();
 

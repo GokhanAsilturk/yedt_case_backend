@@ -15,12 +15,15 @@ const CourseController = {
             const limit = parseInt((_b = req.query.limit) !== null && _b !== void 0 ? _b : '10');
             const search = (_c = req.query.search) !== null && _c !== void 0 ? _c : '';
             const offset = (page - 1) * limit;
-            const whereClause = search ? {
-                [sequelize_1.Op.or]: [
-                    { name: { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { description: { [sequelize_1.Op.iLike]: `%${search}%` } }
-                ]
-            } : {};
+            const sanitizedSearch = typeof search === 'string' ? search.replace(/[%_]/g, '\\$&') : '';
+            const whereClause = sanitizedSearch
+                ? {
+                    [sequelize_1.Op.or]: [
+                        { name: { [sequelize_1.Op.like]: `%${sanitizedSearch}%` } },
+                        { description: { [sequelize_1.Op.like]: `%${sanitizedSearch}%` } }
+                    ]
+                }
+                : {};
             const { count, rows: courses } = await Course_1.default.findAndCountAll({
                 where: whereClause,
                 limit,

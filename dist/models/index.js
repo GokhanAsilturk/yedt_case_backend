@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Enrollment = exports.Course = exports.Student = exports.User = void 0;
+exports.Enrollment = exports.Course = exports.Student = exports.User = exports.sequelize = void 0;
 const User_1 = __importDefault(require("./User"));
 exports.User = User_1.default;
 const Student_1 = __importDefault(require("./Student"));
@@ -12,6 +12,8 @@ const Course_1 = __importDefault(require("./Course"));
 exports.Course = Course_1.default;
 const Enrollment_1 = __importDefault(require("./Enrollment"));
 exports.Enrollment = Enrollment_1.default;
+const database_1 = require("../config/database");
+Object.defineProperty(exports, "sequelize", { enumerable: true, get: function () { return database_1.sequelize; } });
 // User - Student İlişkisi (One-to-One)
 User_1.default.hasOne(Student_1.default, {
     foreignKey: 'userId',

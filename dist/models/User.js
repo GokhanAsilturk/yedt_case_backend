@@ -32,13 +32,10 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
 const bcrypt = __importStar(require("bcryptjs"));
-const database_1 = __importDefault(require("../config/database"));
+const database_1 = require("../config/database");
 class User extends sequelize_1.Model {
     async validatePassword(password) {
         return await bcrypt.compare(password, this.password);
@@ -82,7 +79,7 @@ User.init({
         defaultValue: sequelize_1.DataTypes.NOW
     }
 }, {
-    sequelize: database_1.default,
+    sequelize: database_1.sequelize,
     modelName: 'User',
     tableName: 'Users'
 });

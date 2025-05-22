@@ -18,10 +18,10 @@ const StudentController = {
             const offset = (page - 1) * limit;
             const whereClause = search ? {
                 [sequelize_1.Op.or]: [
+                    { '$user.username$': { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$user.email$': { [sequelize_1.Op.iLike]: `%${search}%` } },
                     { firstName: { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { lastName: { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { '$User.email$': { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { '$User.username$': { [sequelize_1.Op.iLike]: `%${search}%` } }
+                    { lastName: { [sequelize_1.Op.iLike]: `%${search}%` } }
                 ]
             } : {};
             const { count, rows: students } = await Student_1.default.findAndCountAll({
@@ -29,6 +29,7 @@ const StudentController = {
                 include: [
                     {
                         model: User_1.default,
+                        as: 'userAccount', // Use the correct alias
                         attributes: ['username', 'email', 'role']
                     }
                 ],

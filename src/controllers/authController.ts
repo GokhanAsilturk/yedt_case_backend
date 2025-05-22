@@ -16,7 +16,6 @@ interface RegisterRequest extends Request {
     username: string;
     email: string;
     password: string;
-    role?: 'admin' | 'student';
   };
 }
 
@@ -40,7 +39,7 @@ class AuthController {
 
   static async register(req: RegisterRequest, res: Response): Promise<void> {
     try {
-      const { username, email, password, role = 'student' } = req.body;
+      const { username, email, password } = req.body;
 
       // Check if user already exists
       const existingUser = await User.findOne({
@@ -54,15 +53,16 @@ class AuthController {
         return;
       }
 
+      // Create admin user
       const user = await User.create({
         username,
         email,
         password,
-        role
+        role: 'admin'  // Always create as admin
       });
 
       const token = generateToken(user);
-      ApiResponse.success(res, { user, token }, 'User registered successfully', 201);
+      ApiResponse.success(res, { user, token }, 'Admin user registered successfully', 201);
     } catch (error) {
       ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
     }

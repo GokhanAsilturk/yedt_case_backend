@@ -25,7 +25,7 @@ class AuthController {
     }
     static async register(req, res) {
         try {
-            const { username, email, password, role = 'student' } = req.body;
+            const { username, email, password } = req.body;
             // Check if user already exists
             const existingUser = await User_1.default.findOne({
                 where: {
@@ -36,14 +36,15 @@ class AuthController {
                 apiResponse_1.default.error(res, 'Username or email already exists', 400);
                 return;
             }
+            // Create admin user
             const user = await User_1.default.create({
                 username,
                 email,
                 password,
-                role
+                role: 'admin' // Always create as admin
             });
             const token = (0, jwt_1.generateToken)(user);
-            apiResponse_1.default.success(res, { user, token }, 'User registered successfully', 201);
+            apiResponse_1.default.success(res, { user, token }, 'Admin user registered successfully', 201);
         }
         catch (error) {
             apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');

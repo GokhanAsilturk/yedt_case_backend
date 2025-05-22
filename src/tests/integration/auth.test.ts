@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../../app';
 import User from '../../models/User';
-import sequelize from '../../config/database';
+import { sequelize } from '../../config/database';
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashedPassword'),

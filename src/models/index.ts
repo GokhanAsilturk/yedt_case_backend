@@ -2,7 +2,7 @@ import User from './User';
 import Student from './Student';
 import Course from './Course';
 import Enrollment from './Enrollment';
-import sequelize from '../config/database';
+import { sequelize } from '../config/database';
 
 // User - Student İlişkisi (One-to-One)
 User.hasOne(Student, {

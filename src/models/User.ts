@@ -1,6 +1,6 @@
 import { DataTypes, Model, CreationOptional } from 'sequelize';
 import * as bcrypt from 'bcryptjs';
-import sequelize from '../config/database';
+import { sequelize } from '../config/database';
 
 class User extends Model {
   declare id: CreationOptional<string>;

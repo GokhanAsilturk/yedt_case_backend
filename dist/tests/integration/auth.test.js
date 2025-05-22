@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../app"));
 const User_1 = __importDefault(require("../../models/User"));
-const database_1 = __importDefault(require("../../config/database"));
+const database_1 = require("../../config/database");
 jest.mock('bcryptjs', () => ({
     hash: jest.fn().mockResolvedValue('hashedPassword'),
     compare: jest.fn().mockResolvedValue(true)
@@ -14,14 +14,14 @@ jest.mock('bcryptjs', () => ({
 describe('Auth Integration Tests', () => {
     beforeAll(async () => {
         // Test veritabanını temizle ve yeni tablolar oluştur
-        await database_1.default.sync({ force: true });
+        await database_1.sequelize.sync({ force: true });
     });
     beforeEach(async () => {
         await User_1.default.destroy({ where: {} }); // Her test öncesi veritabanını temizle
     });
     afterAll(async () => {
         // Test sonrası veritabanı bağlantısını kapat
-        await database_1.default.close();
+        await database_1.sequelize.close();
     });
     describe('POST /api/auth/register', () => {
         it('should register a new user successfully', async () => {

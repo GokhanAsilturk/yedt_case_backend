@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 
-const sequelize = new Sequelize({
+export const sequelize = new Sequelize({
   dialect: 'postgres',
   host: process.env.DB_HOST ?? 'localhost',
   port: parseInt(process.env.DB_PORT ?? '5432'),
@@ -9,5 +9,3 @@ const sequelize = new Sequelize({
   database: process.env.DB_NAME ?? 'yedt_case',
   logging: false,
 });
-
-export default sequelize;

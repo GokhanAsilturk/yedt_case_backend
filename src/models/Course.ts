@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/database';
+import { sequelize } from '../config/database';
 import { CourseModel } from '../types/models';
 
 const Course = sequelize.define<CourseModel>(

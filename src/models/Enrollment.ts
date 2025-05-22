@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/database';
+import { sequelize } from '../config/database';
 import { EnrollmentModel } from '../types/models';
 import Student from './Student';
 import Course from './Course';

@@ -9,15 +9,23 @@ const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const swagger_1 = require("./config/swagger");
-const database_1 = __importDefault(require("./config/database"));
-require("./models"); // Import model associations
+const database_1 = require("./config/database");
+const seeders_1 = require("./seeders");
+require("./models");
 dotenv_1.default.config();
-// Database sync
-database_1.default.sync({ force: false }).then(() => {
-    console.log('Database synchronized successfully');
-}).catch(err => {
-    console.error('Error syncing database:', err);
-});
+// Initialize database and run seeders
+const initDatabase = async () => {
+    try {
+        await database_1.sequelize.authenticate();
+        console.log('Database connection has been established successfully.');
+        // Run seeders
+        await (0, seeders_1.runSeeders)(database_1.sequelize);
+    }
+    catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+};
+initDatabase();
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)());
@@ -46,8 +54,5 @@ app.use((err, req, res, next) => {
     });
 });
 const PORT = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
 exports.default = app;
 //# sourceMappingURL=app.js.map
