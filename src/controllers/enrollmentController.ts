@@ -13,7 +13,7 @@ import {
 const EnrollmentController = {
   // List all enrollments (with pagination)
   getAllEnrollments: async (
-    req: TypedRequest<{}, any, any, PaginationQuery>, // Use PaginationQuery for query type
+    req: TypedRequest<{}, any, any, PaginationQuery>,
     res: Response
   ): Promise<void> => {
     try {
@@ -43,9 +43,8 @@ const EnrollmentController = {
     }
   },
 
-  // Get student enrollments
   getStudentEnrollments: async (
-    req: TypedRequest<IdParams>, // Use TypedRequest with IdParams
+    req: TypedRequest<IdParams>,
     res: Response
   ): Promise<void> => {
     try {

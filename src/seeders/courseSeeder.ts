@@ -18,7 +18,6 @@ const defaultCourses = [
 export const seedCourses = async (): Promise<void> => {
   try {
     await Promise.all(defaultCourses.map(course => Course.create(course)));
-    console.log('Default courses created successfully');
   } catch (error) {
     console.error('Error creating default courses:', error);
     throw error;

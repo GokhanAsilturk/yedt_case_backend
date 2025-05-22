@@ -1,7 +1,9 @@
 import { Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
+import { sequelize } from '../config/database';
 import Student from '../models/Student';
 import User from '../models/User';
+import Enrollment from '../models/Enrollment';
 import ApiResponse from '../utils/apiResponse';
 import {
   TypedRequest,
@@ -35,7 +37,7 @@ const StudentController = {
         include: [
           {
             model: User,
-            as: 'userAccount', // Use the correct alias
+            as: 'userAccount', // Updated alias to match model association
             attributes: ['username', 'email', 'role']
           }
         ],
@@ -57,6 +59,7 @@ const StudentController = {
         include: [
           {
             model: User,
+            as: 'userAccount', // Updated alias to match model association
             attributes: ['username', 'email', 'role']
           }
         ]
@@ -133,13 +136,24 @@ const StudentController = {
         return;
       }
 
-      // Find and delete associated user
-      const user = await User.findByPk(student.userId);
-      if (user) {
-        await user.destroy();
-      }
+      // Transaction kullanarak silme işlemlerini gerçekleştir
+      await sequelize.transaction(async (t: Transaction) => {
+        // Önce enrollment kayıtlarını sil
+        await Enrollment.destroy({
+          where: { studentId: student.id },
+          transaction: t
+        });
 
-      await student.destroy();
+        // Sonra öğrenciyi sil
+        await student.destroy({ transaction: t });
+
+        // En son user'ı sil
+        await User.destroy({
+          where: { id: student.userId },
+          transaction: t
+        });
+      });
+
       ApiResponse.success(res, null, 'Student deleted successfully');
     } catch (error) {
       ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');

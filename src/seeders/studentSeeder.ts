@@ -1,6 +1,6 @@
 import User from '../models/User';
 import Student from '../models/Student';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export const seedStudents = async (): Promise<void> => {
   try {
@@ -9,8 +9,8 @@ export const seedStudents = async (): Promise<void> => {
 
     // Örnek öğrenci kullanıcısı oluştur
     const studentUser = await User.create({
-      username: 'student',
-      email: 'student@example.com',
+      username: 'gokhanasilturk',
+      email: 'gokhanasilturkk@gmail.com',
       password: hashedPassword,
       role: 'student'
     });
@@ -23,7 +23,6 @@ export const seedStudents = async (): Promise<void> => {
       birthDate: new Date('2000-01-01')
     });
 
-    console.log('Default student created successfully');
   } catch (error) {
     console.error('Error creating default student:', error);
     throw error;
