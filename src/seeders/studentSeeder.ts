@@ -8,7 +8,7 @@ export const seedStudents = async (): Promise<void> => {
     const studentUser = await User.create({
       username: 'gokhanasilturk',
       email: 'gokhanasilturkk@gmail.com',
-      password: 'student123!', // Doğrudan şifreyi verelim, model içinde hashlenecek
+      password: 'Student123!', // Büyük harfle başlatıp model validasyonlarına uygun hale getirdik
       role: 'student'
     });
 

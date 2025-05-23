@@ -63,14 +63,14 @@ Bu proje, eğitim kurumları için kapsamlı bir yönetim sistemi API'si sunmakt
    npm run dev
    ```
 
-### Üretim Ortamı Kurulumu
+### Dev Ortamı Kurulumu
 
 1. `.env.production` dosyasını `.env` olarak kopyalayın ve düzenleyin
    ```bash
    cp .env.production .env
    ```
 
-2. Docker ile üretim ortamını başlatın
+2. Docker ile dev ortamını başlatın
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```

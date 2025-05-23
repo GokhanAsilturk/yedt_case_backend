@@ -45,51 +45,6 @@ const StudentController = {
             apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
         }
     },
-    // Get profile of logged-in student
-    getProfile: async (req, res) => {
-        try {
-            const userId = req.user.id; // JWT'den user id alınır
-            const student = await Student_1.default.findOne({
-                where: { userId },
-                include: [
-                    {
-                        model: User_1.default,
-                        as: 'userAccount',
-                        attributes: ['username', 'email', 'role']
-                    }
-                ]
-            });
-            if (!student) {
-                apiResponse_1.default.error(res, 'Student profile not found', 404);
-                return;
-            }
-            apiResponse_1.default.success(res, student);
-        }
-        catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
-        }
-    },
-    // Update profile of logged-in student
-    updateProfile: async (req, res) => {
-        try {
-            const userId = req.user.id;
-            const { firstName, lastName, birthDate } = req.body;
-            const student = await Student_1.default.findOne({ where: { userId } });
-            if (!student) {
-                apiResponse_1.default.error(res, 'Student profile not found', 404);
-                return;
-            }
-            await student.update({
-                firstName,
-                lastName,
-                birthDate: birthDate ? new Date(birthDate) : undefined
-            });
-            apiResponse_1.default.success(res, student, 'Profile updated successfully');
-        }
-        catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
-        }
-    },
     // Get student details by ID
     getStudentById: async (req, res) => {
         try {

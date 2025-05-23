@@ -9,11 +9,14 @@ class ApiResponse {
         };
         return res.status(statusCode).json(response);
     }
-    static error(res, message = 'Internal Server Error', statusCode = 500) {
+    static error(res, message = 'Internal Server Error', statusCode = 500, error) {
         const response = {
             success: false,
             message
         };
+        if (error) {
+            response.error = error;
+        }
         return res.status(statusCode).json(response);
     }
     static pagination(res, data, page, limit, total) {

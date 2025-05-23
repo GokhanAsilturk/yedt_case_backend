@@ -127,7 +127,7 @@ describe('AuthController', () => {
         },
       };
 
-      await AuthController.register(mockRequest as any, mockResponse as Response);
+      await AuthController.RegisterAdmin(mockRequest as any, mockResponse as Response);
       
       expect(User.findOne).toHaveBeenCalledWith({
         where: {
@@ -183,7 +183,7 @@ describe('AuthController', () => {
         },
       };
 
-      await AuthController.register(mockRequest as any, mockResponse as Response);
+      await AuthController.RegisterAdmin(mockRequest as any, mockResponse as Response);
       
       expect(User.findOne).toHaveBeenCalled();
       expect(User.create).not.toHaveBeenCalled();
@@ -207,7 +207,7 @@ describe('AuthController', () => {
         },
       };
 
-      await AuthController.register(mockRequest as any, mockResponse as Response);
+      await AuthController.RegisterAdmin(mockRequest as any, mockResponse as Response);
       
       expect(ApiResponse.error).toHaveBeenCalledWith(
         mockResponse,

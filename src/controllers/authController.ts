@@ -1,9 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import User from '../models/User';
 import ApiResponse from '../utils/apiResponse';
 import { generateTokenPair, invalidateToken } from '../utils/jwt';
-import { AppError, ErrorCode } from '../middleware/errorHandler';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { ErrorMessage } from '../error/constants/errorMessages';
 
 interface LoginRequest extends Request {
   body: {
@@ -37,19 +39,19 @@ interface LogoutRequest extends Request {
 }
 
 class AuthController {
-  static async login(req: LoginRequest, res: Response): Promise<void> {
+  static async login(req: LoginRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
       const { username, password } = req.body;
       const user = await User.findOne({ where: { username } });
 
       if (!user) {
-        throw new AppError('Geçersiz kullanıcı adı veya şifre', 401, ErrorCode.UNAUTHORIZED);
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
       }
       
       const isValidPassword = await user.validatePassword(password);
       
       if (!isValidPassword) {
-        throw new AppError('Geçersiz kullanıcı adı veya şifre', 401, ErrorCode.UNAUTHORIZED);
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
       }
 
       // Access ve refresh token çifti oluştur
@@ -69,24 +71,29 @@ class AuthController {
         refreshToken
       });
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
+        }
     }
   }
 
-  static async register(req: RegisterRequest, res: Response): Promise<void> {
+  static async RegisterAdmin(req: RegisterRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
       const { username, email, password } = req.body;
 
       // Check if user already exists
       const existingUser = await User.findOne({
-        where: { 
+        where: {
           [Op.or]: [{ username }, { email }]
         }
       });
 
       if (existingUser) {
-        ApiResponse.error(res, 'Username or email already exists', 400);
-        return;
+        throw new AppError('Kullanıcı adı veya e-posta zaten mevcut', 400, ErrorCode.CONFLICT);
       }
 
       // Create admin user
@@ -114,19 +121,25 @@ class AuthController {
         201
       );
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
+        }
     }
   }
   
   /**
    * Refresh token kullanarak yeni bir access token oluşturur
    */
-  static async refreshToken(req: RefreshTokenRequest, res: Response): Promise<void> {
+  static async refreshToken(req: RefreshTokenRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
       const { refreshToken } = req.body;
       
       if (!refreshToken) {
-        throw new AppError('Refresh token gerekli', 400, ErrorCode.BAD_REQUEST);
+        throw new AppError(ErrorMessage.BAD_REQUEST.tr, 400, ErrorCode.BAD_REQUEST);
       }
       
       const newAccessToken = await import('../utils/jwt').then(m =>
@@ -134,25 +147,25 @@ class AuthController {
       );
       
       if (!newAccessToken) {
-        throw new AppError('Geçersiz veya süresi dolmuş refresh token', 401, ErrorCode.UNAUTHORIZED);
+        throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED);
       }
       
       ApiResponse.success(res, { accessToken: newAccessToken });
     } catch (error) {
-      if (error instanceof AppError) {
-        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
-      } else if (error instanceof Error) {
-        ApiResponse.error(res, error.message, 500);
-      } else {
-        ApiResponse.error(res, 'Token yenileme sırasında bir hata oluştu', 500);
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Token yenileme sırasında bir hata oluştu', 500);
+        }
     }
   }
   
   /**
    * Kullanıcı çıkışını yapar ve tokenları geçersiz kılar
    */
-  static async logout(req: LogoutRequest, res: Response): Promise<void> {
+  static async logout(req: LogoutRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
       // Access token'ı geçersiz kıl (eğer varsa)
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
@@ -176,13 +189,13 @@ class AuthController {
       
       ApiResponse.success(res, null, 'Başarıyla çıkış yapıldı');
     } catch (error) {
-      if (error instanceof AppError) {
-        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
-      } else if (error instanceof Error) {
-        ApiResponse.error(res, error.message, 500);
-      } else {
-        ApiResponse.error(res, 'Çıkış yapılırken bir hata oluştu', 500);
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Çıkış yapılırken bir hata oluştu', 500);
+        }
     }
   }
 }

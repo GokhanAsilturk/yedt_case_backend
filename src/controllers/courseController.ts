@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import Course from '../models/Course';
 import ApiResponse from '../utils/apiResponse';
@@ -9,12 +9,16 @@ import {
   CourseListRequest,
   CourseBody
 } from '../types/express';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { ErrorMessage } from '../error/constants/errorMessages';
 
 const CourseController = {
   // List all courses (with pagination and search)
   getAllCourses: async (
     req: CourseListRequest,
-    res: Response
+    res: Response,
+    next?: NextFunction
   ): Promise<void> => {
     try {
       const page = parseInt(req.query.page ?? '1');
@@ -41,41 +45,46 @@ const CourseController = {
 
       ApiResponse.pagination(res, courses, page, limit, count);
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message);
-      } else {
-        ApiResponse.error(res, 'An error occurred while fetching courses');
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : ErrorMessage.GENERIC_ERROR.tr, 500);
+        }
     }
   },
 
   // Get course details by ID
   getCourseById: async (
     req: CourseGetRequest,
-    res: Response
+    res: Response,
+    next?: NextFunction
   ): Promise<void> => {
     try {
       const course = await Course.findByPk(req.params.id);
       
       if (!course) {
-        ApiResponse.error(res, 'Course not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       ApiResponse.success(res, course);
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message);
-      } else {
-        ApiResponse.error(res, 'An error occurred while fetching the course');
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Kurs alınırken bir hata oluştu', 500);
+        }
     }
   },
 
   // Create a new course
   createCourse: async (
     req: CourseCreateRequest,
-    res: Response
+    res: Response,
+    next?: NextFunction
   ): Promise<void> => {
     try {      const { name, description = '' } = req.body;
       const course = await Course.create({
@@ -85,25 +94,27 @@ const CourseController = {
       
       ApiResponse.success(res, course, 'Course created successfully', 201);
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message);
-      } else {
-        ApiResponse.error(res, 'An error occurred while creating the course');
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Kurs oluşturulurken bir hata oluştu', 500);
+        }
     }
   },
 
   // Update course details
   updateCourse: async (
     req: CourseUpdateRequest,
-    res: Response
+    res: Response,
+    next?: NextFunction
   ): Promise<void> => {
     try {
       const course = await Course.findByPk(req.params.id);
       
       if (!course) {
-        ApiResponse.error(res, 'Course not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       const { name, description } = req.body;
@@ -114,35 +125,39 @@ const CourseController = {
       
       ApiResponse.success(res, course, 'Course updated successfully');
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message);
-      } else {
-        ApiResponse.error(res, 'An error occurred while updating the course');
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Kurs güncellenirken bir hata oluştu', 500);
+        }
     }
   },
 
   // Delete a course
   deleteCourse: async (
     req: CourseGetRequest,
-    res: Response
+    res: Response,
+    next?: NextFunction
   ): Promise<void> => {
     try {
       const course = await Course.findByPk(req.params.id);
       
       if (!course) {
-        ApiResponse.error(res, 'Course not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       await course.destroy();
       ApiResponse.success(res, null, 'Course deleted successfully');
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message);
-      } else {
-        ApiResponse.error(res, 'An error occurred while deleting the course');
-      }
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Kurs silinirken bir hata oluştu', 500);
+        }
     }
   }
 };

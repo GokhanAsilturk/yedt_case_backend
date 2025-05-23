@@ -1,6 +1,8 @@
 import { DataTypes, Model, CreationOptional } from 'sequelize';
 import * as bcrypt from 'bcryptjs';
-import { AppError, ErrorCode } from '../middleware/errorHandler';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { validatePassword } from '../middleware/validator';
 import { sequelize } from '../config/database';
 
 class User extends Model {
@@ -39,7 +41,10 @@ User.init({
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      is: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    }
   },
   role: {
     type: DataTypes.ENUM('admin', 'student'),
@@ -76,11 +81,9 @@ User.beforeUpdate(async (user: User) => {
 
 // Yeni kullanıcı oluşturulduğunda şifreyi hashlemek için hook
 User.beforeCreate(async (user: User) => {
-  // Şifre karmaşıklığını kontrol et
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!passwordRegex.test(user.password)) {
+  if (!validatePassword(user.password)) {
     throw new AppError(
-      'Şifre en az 8 karakter uzunluğunda olmalı ve en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.',
+      'Şifre en az 8 karakter uzunluğunda olmalı, en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.',
       400,
       ErrorCode.VALIDATION_ERROR
     );

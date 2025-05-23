@@ -11,6 +11,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const swagger_1 = require("./config/swagger");
 const database_1 = require("./config/database");
 const seeders_1 = require("./seeders");
+const middleware_1 = require("./middleware");
 require("./models");
 dotenv_1.default.config();
 // Initialize database and run seeders
@@ -18,8 +19,14 @@ const initDatabase = async () => {
     try {
         await database_1.sequelize.authenticate();
         console.log('Database connection has been established successfully.');
-        // Run seeders
-        await (0, seeders_1.runSeeders)(database_1.sequelize);
+        // Veritabanı şemasını senkronize et (sadece değişiklikleri uygula, tabloları silmeden)
+        await database_1.sequelize.sync({ alter: true });
+        console.log('Database schema synchronized successfully.');
+        // Run seeders (ilk çalıştırmada veya NODE_ENV=development ise)
+        const isDevEnvironment = process.env.NODE_ENV === 'development';
+        if (isDevEnvironment) {
+            await (0, seeders_1.runSeeders)(database_1.sequelize);
+        }
     }
     catch (error) {
         console.error('Unable to connect to the database:', error);
@@ -27,10 +34,14 @@ const initDatabase = async () => {
 };
 initDatabase();
 const app = (0, express_1.default)();
-// Middleware
+// Temel Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use((0, morgan_1.default)('dev'));
+// Güvenlik Middleware'leri
+(0, middleware_1.setupSecurityMiddleware)(app);
+// SQL Injection koruması tekrar aktif
+app.use(middleware_1.sqlInjectionProtection);
 // Routes
 const auth_1 = __importDefault(require("./routes/auth"));
 const students_1 = __importDefault(require("./routes/students"));
@@ -46,13 +57,10 @@ app.use('/api/auth', auth_1.default);
 app.use('/api/students', students_1.default);
 app.use('/api/courses', courses_1.default);
 app.use('/api/enrollments', enrollments_1.default);
-app.use((err, req, res, next) => {
-    var _a, _b;
-    console.error(err.stack);
-    res.status((_a = err.status) !== null && _a !== void 0 ? _a : 500).json({
-        error: (_b = err.message) !== null && _b !== void 0 ? _b : 'Something went wrong!'
-    });
-});
+// 404 handler for undefined routes
+app.use(middleware_1.notFoundHandler);
+// Global error handling middleware
+app.use(middleware_1.errorHandler);
 const PORT = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
 exports.default = app;
 //# sourceMappingURL=app.js.map

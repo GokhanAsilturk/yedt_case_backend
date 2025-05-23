@@ -1,6 +1,6 @@
 import express from 'express';
 import AuthController from '../controllers/authController';
-import { validate, commonSchemas } from '../middleware/index';
+import { validate, commonSchemas, requireRoles } from '../middleware/index';
 import Joi from 'joi';
 import { auth } from '../middleware';
 
@@ -67,8 +67,10 @@ router.post('/login', validate(loginSchema), AuthController.login);
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register new user
+ *     summary: Register new admin user
  *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -86,17 +88,15 @@ router.post('/login', validate(loginSchema), AuthController.login);
  *                 type: string
  *               password:
  *                 type: string
- *               role:
- *                 type: string
- *                 enum: [admin, student]
- *                 default: student
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: Admin user registered successfully
  *       400:
  *         description: Username or email already exists
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/register', validate(registerSchema), AuthController.register);
+router.post('/register', auth, requireRoles(['admin']), validate(registerSchema), AuthController.RegisterAdmin);
 
 /**
  * @swagger

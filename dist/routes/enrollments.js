@@ -8,51 +8,7 @@ const enrollmentController_1 = __importDefault(require("../controllers/enrollmen
 const middleware_1 = require("../middleware");
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler")); // Import the new asyncHandler
 const router = express_1.default.Router();
-/**
- * @swagger
- * /api/student/courses/{courseId}/enroll:
- *   post:
- *     summary: Enroll logged-in student to a course
- *     tags: [Student Enrollment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: courseId
- *         required: true
- *         schema:
- *           type: string
- *         description: Course ID
- *     responses:
- *       201:
- *         description: Enrolled successfully
- *       400:
- *         description: Already enrolled in this course
- *       404:
- *         description: Student or course not found
- */
 router.post('/student/courses/:courseId/enroll', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentController_1.default.enrollCourse));
-/**
- * @swagger
- * /api/student/courses/{courseId}/withdraw:
- *   delete:
- *     summary: Withdraw logged-in student from a course
- *     tags: [Student Enrollment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: courseId
- *         required: true
- *         schema:
- *           type: string
- *         description: Course ID
- *     responses:
- *       200:
- *         description: Withdrawn successfully
- *       404:
- *         description: Student or enrollment not found
- */
 router.delete('/student/courses/:courseId/withdraw', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentController_1.default.withdrawCourse));
 /**
  * @swagger

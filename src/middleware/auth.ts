@@ -1,9 +1,10 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import ApiResponse from '../utils/apiResponse';
 import { AuthRequest, AuthMiddleware } from '../types/express';
-import { AppError, ErrorCode } from './errorHandler';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { ErrorMessage } from '../error/constants/errorMessages';
 
 // Uygulama içindeki izinler
 export enum Permission {
@@ -73,33 +74,33 @@ export const auth: AuthMiddleware = async (
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      ApiResponse.error(res, 'Authentication required', 401);
-      return;
+      throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED);
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET ?? 'your-secret-key') as jwt.JwtPayload & { exp?: number };
     
     // Token süresinin dolup dolmadığını kontrol et
     if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-      throw new AppError('Token süresi doldu', 401, ErrorCode.TOKEN_EXPIRED);
+      throw new AppError('Token süresi doldu.', 401, ErrorCode.UNAUTHORIZED);
     }
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
-      ApiResponse.error(res, 'User not found', 401);
-      return;
+      throw new AppError(ErrorMessage.NOT_FOUND.tr, 401, ErrorCode.UNAUTHORIZED);
     }
 
     req.user = user;
     req.token = token;
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      ApiResponse.error(res, 'Invalid token', 401);
+    if (error instanceof AppError) {
+      next(error);
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      next(new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED));
     } else if (error instanceof jwt.TokenExpiredError) {
-      ApiResponse.error(res, 'Token expired', 401);
+      next(new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED));
     } else {
-      ApiResponse.error(res, 'Authentication failed', 401);
+      next(new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED));
     }
   }
 };
@@ -112,14 +113,14 @@ export const requirePermission = (requiredPermission: Permission): AuthMiddlewar
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        throw new AppError('Yetkilendirme gerekli', 401, ErrorCode.UNAUTHORIZED);
+        throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED);
       }
       
       const { role } = req.user;
       
       if (!hasPermission(role, requiredPermission)) {
         throw new AppError(
-          'Bu işlemi gerçekleştirmek için gerekli izne sahip değilsiniz',
+          ErrorMessage.FORBIDDEN.tr,
           403,
           ErrorCode.FORBIDDEN
         );
@@ -128,11 +129,11 @@ export const requirePermission = (requiredPermission: Permission): AuthMiddlewar
       next();
     } catch (error) {
       if (error instanceof AppError) {
-        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        next(error);
       } else if (error instanceof Error) {
-        ApiResponse.error(res, error.message, 500);
+        next(new AppError(error.message, 500, ErrorCode.UNAUTHORIZED));
       } else {
-        ApiResponse.error(res, 'Yetkilendirme hatası', 500);
+        next(new AppError(ErrorMessage.SECURITY_ERROR.tr, 500, ErrorCode.UNAUTHORIZED));
       }
     }
   };
@@ -146,12 +147,12 @@ export const requireRoles = (roles: string[]): AuthMiddleware => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        throw new AppError('Yetkilendirme gerekli', 401, ErrorCode.UNAUTHORIZED);
+        throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED);
       }
       
       if (!roles.includes(req.user.role)) {
         throw new AppError(
-          'Bu işlemi gerçekleştirmek için gerekli role sahip değilsiniz',
+          ErrorMessage.FORBIDDEN.tr,
           403,
           ErrorCode.FORBIDDEN
         );
@@ -160,11 +161,11 @@ export const requireRoles = (roles: string[]): AuthMiddleware => {
       next();
     } catch (error) {
       if (error instanceof AppError) {
-        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        next(error);
       } else if (error instanceof Error) {
-        ApiResponse.error(res, error.message, 500);
+        next(new AppError(error.message, 500, ErrorCode.UNAUTHORIZED));
       } else {
-        ApiResponse.error(res, 'Yetkilendirme hatası', 500);
+        next(new AppError(ErrorMessage.SECURITY_ERROR.tr, 500, ErrorCode.UNAUTHORIZED));
       }
     }
   };

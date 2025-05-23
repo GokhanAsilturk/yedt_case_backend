@@ -1,11 +1,13 @@
 //index.ts
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express';
-import ApiResponse from '../utils/apiResponse';
-import { errorHandler, notFoundHandler, AppError, ErrorCode } from './errorHandler';
+import { errorHandler, notFoundHandler } from './errorHandler';
 import { validate, commonSchemas, ValidationSchema } from './validator';
 import { setupSecurityMiddleware, sqlInjectionProtection } from './security';
 import { auth, requirePermission, requireRoles, Permission, hasPermission } from './auth';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { ErrorMessage } from '../error/constants/errorMessages';
 
 export const checkRole = (roles: string[]) => {
   return async (
@@ -15,25 +17,21 @@ export const checkRole = (roles: string[]) => {
   ): Promise<void> => {
     try {
       if (!req.user) {
-        ApiResponse.error(res, 'Authentication required', 401);
-        return;
+        throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 401, ErrorCode.UNAUTHORIZED);
       }
 
       if (!roles.includes(req.user.role)) {
-        ApiResponse.error(
-          res,
-          'You do not have permission to perform this action',
-          403
-        );
-        return;
+        throw new AppError(ErrorMessage.FORBIDDEN.tr, 403, ErrorCode.FORBIDDEN);
       }
 
       next();
     } catch (error) {
-      if (error instanceof Error) {
-        ApiResponse.error(res, error.message, 500);
+      if (error instanceof AppError) {
+        next(error);
+      } else if (error instanceof Error) {
+        next(new AppError(error.message, 500, ErrorCode.UNAUTHORIZED));
       } else {
-        ApiResponse.error(res, 'Authorization check failed', 500);
+        next(new AppError(ErrorMessage.SECURITY_ERROR.tr, 500, ErrorCode.UNAUTHORIZED));
       }
     }
   };

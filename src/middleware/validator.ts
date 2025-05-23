@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
-import { AppError, ErrorCode } from './errorHandler';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
 
+export const validatePassword = (password: string): boolean => {
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  return passwordRegex.test(password);
+};
 type SchemaType = Record<string, Joi.Schema>;
 
 export interface ValidationSchema {
@@ -68,9 +73,9 @@ export const commonSchemas = {
     'string.email': 'Geçersiz e-posta adresi formatı.',
     'any.required': 'E-posta alanı zorunludur.'
   }),
-  password: Joi.string().min(8).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/).required().messages({
+  password: Joi.string().min(8).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).required().messages({
     'string.min': 'Şifre en az 8 karakter uzunluğunda olmalıdır.',
-    'string.pattern.base': 'Şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.',
+    'string.pattern.base': 'Şifre en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.',
     'any.required': 'Şifre alanı zorunludur.'
   }),
   username: Joi.string().alphanum().min(3).max(30).required().messages({

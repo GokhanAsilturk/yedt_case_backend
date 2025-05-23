@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { Op, Transaction } from 'sequelize';
 import { sequelize } from '../config/database';
 import Student from '../models/Student';
@@ -13,10 +13,13 @@ import {
   StudentUpdateBody,
   SearchQuery // Import SearchQuery
 } from '../types/express';
+import { AppError } from '../error/models/AppError';
+import { ErrorCode } from '../error/constants/errorCodes';
+import { ErrorMessage } from '../error/constants/errorMessages';
 
 const StudentController = {
   // List all students (with pagination and search)
-  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response): Promise<void> => { // Use PaginationQuery and SearchQuery
+  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response, next?: NextFunction): Promise<void> => { // Use PaginationQuery and SearchQuery
     try {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
@@ -48,12 +51,18 @@ const StudentController = {
 
       ApiResponse.pagination(res, students, page, limit, count);
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : ErrorMessage.GENERIC_ERROR.tr, 500);
+        }
     }
   },
 
   // Get student details by ID
-  getStudentById: async (req: TypedRequest<IdParams>, res: Response): Promise<void> => { // Use TypedRequest with IdParams
+  getStudentById: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams
     try {
       const student = await Student.findByPk(req.params.id, {
         include: [
@@ -66,18 +75,23 @@ const StudentController = {
       });
 
       if (!student) {
-        ApiResponse.error(res, 'Student not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       ApiResponse.success(res, student);
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci bilgileri alınırken bir hata oluştu', 500);
+        }
     }
   },
 
   // Create a new student
-  createStudent: async (req: TypedRequest<{}, any, StudentCreateBody>, res: Response): Promise<void> => { // Use TypedRequest with StudentCreateBody
+  createStudent: async (req: TypedRequest<{}, any, StudentCreateBody>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with StudentCreateBody
     try {
       const { username, email, password, firstName, lastName, birthDate } = req.body;
 
@@ -99,19 +113,24 @@ const StudentController = {
 
       ApiResponse.success(res, { user, student }, 'Student created successfully', 201);
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci oluşturulurken bir hata oluştu', 500);
+        }
     }
   },
 
   // Update student details
-  updateStudent: async (req: TypedRequest<IdParams, any, StudentUpdateBody>, res: Response): Promise<void> => { // Use TypedRequest with IdParams and StudentUpdateBody
+  updateStudent: async (req: TypedRequest<IdParams, any, StudentUpdateBody>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams and StudentUpdateBody
     try {
       const { firstName, lastName, birthDate } = req.body;
       const student = await Student.findByPk(req.params.id);
 
       if (!student) {
-        ApiResponse.error(res, 'Student not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       await student.update({
@@ -122,18 +141,23 @@ const StudentController = {
 
       ApiResponse.success(res, student, 'Student updated successfully');
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500);
+        }
     }
   },
 
   // Delete a student
-  deleteStudent: async (req: TypedRequest<IdParams>, res: Response): Promise<void> => { // Use TypedRequest with IdParams
+  deleteStudent: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams
     try {
       const student = await Student.findByPk(req.params.id);
 
       if (!student) {
-        ApiResponse.error(res, 'Student not found', 404);
-        return;
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
       // Transaction kullanarak silme işlemlerini gerçekleştir
@@ -156,7 +180,13 @@ const StudentController = {
 
       ApiResponse.success(res, null, 'Student deleted successfully');
     } catch (error) {
-      ApiResponse.error(res, error instanceof Error ? error.message : 'An error occurred');
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci silinirken bir hata oluştu', 500);
+        }
     }
   }
 };
