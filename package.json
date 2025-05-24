@@ -18,7 +18,13 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "reset:student": "ts-node src/scripts/reset/resetStudent.ts",
+    "reset:course": "ts-node src/scripts/reset/resetCourse.ts",
+    "reset:enrollment": "ts-node src/scripts/reset/resetEnrollment.ts",
+    "reset:user": "ts-node src/scripts/reset/resetUser.ts",
+    "reset:all": "ts-node src/scripts/reset/resetTables.ts all",
+    "reset": "ts-node src/scripts/reset/resetTables.ts"
   },
   "keywords": [],
   "author": "",

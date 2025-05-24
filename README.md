@@ -1,6 +1,105 @@
 # Eğitim Yönetim Sistemi API
 
-Bu proje, eğitim kurumları için kapsamlı bir yönetim sistemi API'si sunmaktadır. Öğrenci, kurs ve kayıt yönetimi için RESTful API hizmetleri sağlar.
+## Kurulum
+
+### Gereksinimler
+
+- Node.js (v16+)
+- Docker ve Docker Compose
+- PostgreSQL (Docker ile otomatik kurulum)
+
+### Geliştirme Ortamı Kurulumu
+
+1. Projeyi klonlayın
+   ```bash
+   git clone https://github.com/GokhanAsilturk/yedt_case_backend
+   cd egitim-yonetim-sistemi/backend
+   ```
+
+2. Bağımlılıkları yükleyin
+   ```bash
+   npm install
+   ```
+
+3. `.env.development` dosyasını `.env` olarak kopyalayın ve gerekirse düzenleyin
+   ```bash
+   cp .env.development .env
+   ```
+
+4. Docker ile geliştirme ortamını başlatın
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+
+5. Veritabanını ve ilk verileri oluşturun
+   ```bash
+   npm run db:init
+   npm run seed
+   ```
+
+6. Uygulamayı geliştirme modunda başlatın
+   ```bash
+   npm run dev
+   ```
+
+### Dev Ortamı Kurulumu
+
+1. `.env.production` dosyasını `.env` olarak kopyalayın ve düzenleyin
+   ```bash
+   cp .env.production .env
+   ```
+
+2. Docker ile dev ortamını başlatın
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+## API Kullanımı
+
+Swagger API dokümantasyonuna şu adres üzerinden erişebilirsiniz:
+```
+http://localhost:5000/api-docs
+```
+
+## Veritabanı Sıfırlama (Reset) Scriptleri
+
+Bu proje, veritabanı tablolarını sıfırlamak için kullanışlı scriptler sunar. Bu scriptler, geliştirme ve test süreçlerinde veritabanını temizlemek için kullanılabilir.
+
+### Kullanım
+
+Sıfırlama scriptlerini kullanmak için aşağıdaki komutları kullanabilirsiniz:
+
+- **Tüm tabloları sıfırlamak için:**
+```bash
+npm run reset:all
+```
+- **Belirli bir tabloyu sıfırlamak için:**
+```bash
+npm run reset:student    # Öğrenci tablosunu sıfırlar
+npm run reset:course     # Kurs tablosunu sıfırlar
+npm run reset:enrollment # Kayıt tablosunu sıfırlar
+npm run reset:user       # Kullanıcı tablosunu sıfırlar
+```
+
+**Not:** `npm run reset` komutu, bu kullanım kılavuzunu görüntüler.
+
+## Testler
+
+### Birim Testleri Çalıştırma
+```bash
+npm run test:unit
+```
+
+### Entegrasyon Testleri Çalıştırma
+```bash
+npm run test:integration
+```
+
+### Tüm Testleri Çalıştırma
+```bash
+npm test
+```
+
 
 ## Özellikler
 
@@ -81,6 +180,28 @@ Swagger API dokümantasyonuna şu adres üzerinden erişebilirsiniz:
 ```
 http://localhost:5000/api-docs
 ```
+
+## Veritabanı Sıfırlama (Reset) Scriptleri
+
+Bu proje, veritabanı tablolarını sıfırlamak için kullanışlı scriptler sunar. Bu scriptler, geliştirme ve test süreçlerinde veritabanını temizlemek için kullanılabilir.
+
+### Kullanım
+
+Sıfırlama scriptlerini kullanmak için aşağıdaki komutları kullanabilirsiniz:
+
+- **Tüm tabloları sıfırlamak için:**
+```bash
+npm run reset:all
+```
+- **Belirli bir tabloyu sıfırlamak için:**
+```bash
+npm run reset:student    # Öğrenci tablosunu sıfırlar
+npm run reset:course     # Kurs tablosunu sıfırlar
+npm run reset:enrollment # Kayıt tablosunu sıfırlar
+npm run reset:user       # Kullanıcı tablosunu sıfırlar
+```
+
+**Not:** `npm run reset` komutu, bu kullanım kılavuzunu görüntüler.
 
 ## Testler
 

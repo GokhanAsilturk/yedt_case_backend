@@ -1,11 +1,25 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import StudentController from '../controllers/studentController';
-import { auth, checkRole } from '../middleware';
-import asyncHandler from '../utils/asyncHandler'; // Import the new asyncHandler
+import { auth, checkRole, validate } from '../middleware';
+import asyncHandler from '../utils/asyncHandler';
+import Joi from 'joi';
 
 const router = express.Router();
 
-
+// Öğrenci profil güncelleme şeması
+const updateStudentProfileSchema = {
+  body: {
+    firstName: Joi.string().required().messages({
+      'any.required': 'Ad alanı zorunludur.'
+    }),
+    lastName: Joi.string().required().messages({
+      'any.required': 'Soyad alanı zorunludur.'
+    }),
+    birthDate: Joi.date().iso().messages({
+      'date.format': 'Geçerli bir tarih formatı giriniz (YYYY-MM-DD).'
+    })
+  }
+};
 
 /**
  * @swagger
@@ -59,6 +73,17 @@ router.get('/',
  */
 router.get('/:id',
   auth,
+  (req: Request & { user?: any }, res: Response, next: NextFunction): void => {
+    // Öğrencinin kendi ID'si ile eşleşme kontrolü
+    if (req.user?.role === 'student' && req.params.id !== req.user.id && req.params.id !== req.user.studentId) {
+      res.status(403).json({
+        success: false,
+        message: 'Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır.'
+      });
+    } else {
+      next();
+    }
+  },
   asyncHandler(StudentController.getStudentById)
 );
 
@@ -177,6 +202,51 @@ router.delete('/:id',
   auth,
   checkRole(['admin']),
   asyncHandler(StudentController.deleteStudent)
+);
+
+/**
+ * @swagger
+ * /api/students/profile:
+ *   put:
+ *     summary: Update student profile
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       404:
+ *         description: Student not found
+ */
+// Öğrenci profil güncelleme endpoint'i - Sadece öğrencinin kendi profilini güncellemesine izin verir
+router.put('/profile',
+  auth,
+  (req: Request & { user?: any }, res: Response, next: NextFunction): void => {
+    if (req.user?.role !== 'student') {
+      res.status(403).json({
+        success: false,
+        message: 'Bu işlem sadece öğrenciler tarafından yapılabilir.'
+      });
+    } else {
+      next();
+    }
+  },
+  validate(updateStudentProfileSchema),
+  asyncHandler(StudentController.updateStudentProfile)
 );
 
 export default router;

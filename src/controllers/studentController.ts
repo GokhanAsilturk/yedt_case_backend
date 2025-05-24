@@ -1,18 +1,11 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { TypedRequest, PaginationQuery, IdParams, StudentCreateBody, StudentUpdateBody, SearchQuery } from '../types/express';
 import { Op, Transaction } from 'sequelize';
 import { sequelize } from '../config/database';
 import Student from '../models/Student';
 import User from '../models/User';
 import Enrollment from '../models/Enrollment';
 import ApiResponse from '../utils/apiResponse';
-import {
-  TypedRequest,
-  PaginationQuery,
-  IdParams,
-  StudentCreateBody,
-  StudentUpdateBody,
-  SearchQuery // Import SearchQuery
-} from '../types/express';
 import { AppError } from '../error/models/AppError';
 import { ErrorCode } from '../error/constants/errorCodes';
 import { ErrorMessage } from '../error/constants/errorMessages';
@@ -62,7 +55,7 @@ const StudentController = {
   },
 
   // Get student details by ID
-  getStudentById: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams
+  getStudentById: async (req: Request & { user?: any }, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const student = await Student.findByPk(req.params.id, {
         include: [
@@ -77,7 +70,12 @@ const StudentController = {
       if (!student) {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
-
+  
+      // Öğrencinin kendi ID'si kontrolü
+      if (req.user?.role === 'student' && student.id !== (req.user.studentId ?? req.user.id)) {
+        throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 403, ErrorCode.FORBIDDEN);
+      }
+  
       ApiResponse.success(res, student);
     } catch (error) {
       if (next) {
@@ -187,6 +185,35 @@ const StudentController = {
         } else {
           ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci silinirken bir hata oluştu', 500);
         }
+    }
+  },
+  
+  // Update student profile
+  updateStudentProfile: async (req: Request & { user?: any } & { body: StudentUpdateBody }, res: Response, next?: NextFunction): Promise<void> => {
+    try {
+      const { firstName, lastName, birthDate } = req.body;
+      const studentId = req.user?.studentId ?? req.user?.id; // Assuming studentId is available in req.user
+      const student = await Student.findByPk(studentId);
+
+      if (!student) {
+        throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
+      }
+
+      await student.update({
+        firstName,
+        lastName,
+        birthDate: birthDate ? new Date(birthDate) : undefined,
+      });
+
+      ApiResponse.success(res, student, 'Profil başarıyla güncellendi');
+    } catch (error) {
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+      } else {
+        ApiResponse.error(res, error instanceof Error ? error.message : 'Profil güncellenirken bir hata oluştu', 500);
+      }
     }
   }
 };

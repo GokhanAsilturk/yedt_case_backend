@@ -1,11 +1,10 @@
 import { Request, Response, RequestHandler } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { UserModel } from './models';
 
 // Base Request Type
 export interface AuthRequest extends Request {
-  user?: UserModel;
+  user?: any; // UserModel;
   token?: string;
 }
 

@@ -141,6 +141,85 @@ class AuthController {
         }
     }
   }
+  static async adminLogin(req: LoginRequest, res: Response, next?: NextFunction): Promise<void> {
+    try {
+      const { username, password } = req.body;
+      const user = await User.findOne({ where: { username, role: 'admin' } });
+
+      if (!user) {
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
+      }
+
+      const isValidPassword = await user.validatePassword(password);
+
+      if (!isValidPassword) {
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
+      }
+
+      const { accessToken, refreshToken } = generateTokenPair(user);
+
+      const safeUser = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      };
+
+      ApiResponse.success(res, {
+        user: safeUser,
+        accessToken,
+        refreshToken
+      });
+    } catch (error) {
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+      } else {
+        ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
+      }
+    }
+  }
+
+  static async studentLogin(req: LoginRequest, res: Response, next?: NextFunction): Promise<void> {
+    try {
+      const { username, password } = req.body;
+      const user = await User.findOne({ where: { username, role: 'student' } });
+
+      if (!user) {
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
+      }
+
+      const isValidPassword = await user.validatePassword(password);
+
+      if (!isValidPassword) {
+        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
+      }
+
+      const { accessToken, refreshToken } = generateTokenPair(user);
+
+      const safeUser = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      };
+
+      ApiResponse.success(res, {
+        user: safeUser,
+        accessToken,
+        refreshToken
+      });
+    } catch (error) {
+      if (next) {
+        next(error);
+      } else if (error instanceof AppError) {
+        ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
+      } else {
+        ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
+      }
+    }
+  }
 }
 
 export default AuthController;

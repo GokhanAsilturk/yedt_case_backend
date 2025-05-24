@@ -27,9 +27,9 @@ const refreshTokenSchema = {
 
 /**
  * @swagger
- * /api/auth/login:
+ * /api/auth/admin/login:
  *   post:
- *     summary: Login user
+ *     summary: Login as an admin
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -47,13 +47,40 @@ const refreshTokenSchema = {
  *                 type: string
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Admin login successful
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', validate(loginSchema), AuthController.login);
+router.post('/admin/login', validate(loginSchema), AuthController.adminLogin);
 
 /**
+ * @swagger
+ * /api/auth/student/login:
+ *   post:
+ *     summary: Student login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Student login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+router.post('/student/login', validate(loginSchema), AuthController.studentLogin);
+
 /**
  * @swagger
  * /api/auth/refresh-token:
