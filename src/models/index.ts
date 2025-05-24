@@ -1,5 +1,6 @@
 import User from './User';
 import Student from './Student';
+import Admin from './Admin';
 import Course from './Course';
 import Enrollment from './Enrollment';
 import { sequelize } from '../config/database';
@@ -10,6 +11,16 @@ User.hasOne(Student, {
   as: 'studentProfile'
 });
 Student.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'userAccount'
+});
+
+// User - Admin İlişkisi (One-to-One)
+User.hasOne(Admin, {
+  foreignKey: 'userId',
+  as: 'adminProfile'
+});
+Admin.belongsTo(User, {
   foreignKey: 'userId',
   as: 'userAccount'
 });
@@ -49,4 +60,4 @@ Enrollment.belongsTo(Course, {
   as: 'enrolledCourse'
 });
 
-export { sequelize, User, Student, Course, Enrollment };
+export { sequelize, User, Student, Admin, Course, Enrollment };

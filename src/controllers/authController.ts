@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Op } from 'sequelize';
 import User from '../models/User';
 import ApiResponse from '../utils/apiResponse';
 import { generateTokenPair, invalidateToken } from '../utils/jwt';
@@ -14,13 +13,6 @@ interface LoginRequest extends Request {
   };
 }
 
-interface RegisterRequest extends Request {
-  body: {
-    username: string;
-    email: string;
-    password: string;
-  };
-}
 
 interface RefreshTokenRequest extends Request {
   body: {
@@ -81,55 +73,6 @@ class AuthController {
     }
   }
 
-  static async RegisterAdmin(req: RegisterRequest, res: Response, next?: NextFunction): Promise<void> {
-    try {
-      const { username, email, password } = req.body;
-
-      // Check if user already exists
-      const existingUser = await User.findOne({
-        where: {
-          [Op.or]: [{ username }, { email }]
-        }
-      });
-
-      if (existingUser) {
-        throw new AppError('Kullanıcı adı veya e-posta zaten mevcut', 400, ErrorCode.CONFLICT);
-      }
-
-      // Create admin user
-      const user = await User.create({
-        username,
-        email,
-        password,
-        role: 'admin'  // Always create as admin
-      });
-
-      // Hassas kullanıcı bilgilerini çıkar
-      const safeUser = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      };
-      
-      const { accessToken, refreshToken } = generateTokenPair(user);
-      
-      ApiResponse.success(
-        res,
-        { user: safeUser, accessToken, refreshToken },
-        'Yönetici kullanıcı başarıyla kaydedildi',
-        201
-      );
-    } catch (error) {
-      if (next) {
-        next(error);
-      } else if (error instanceof AppError) {
-          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
-        } else {
-          ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
-        }
-    }
-  }
   
   /**
    * Refresh token kullanarak yeni bir access token oluşturur

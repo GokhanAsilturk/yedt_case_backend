@@ -55,6 +55,23 @@ export interface StudentUpdateBody {
   birthDate?: string;
 }
 
+export interface AdminCreateBody {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  title: string;
+}
+
+export interface AdminUpdateBody {
+  firstName?: string;
+  lastName?: string;
+  department?: string;
+  title?: string;
+}
+
 export interface CourseBody {
   name: string;
   description?: string;
@@ -87,6 +104,11 @@ export type StudentListRequest = TypedRequest<{}, any, any, PaginationQuery>;
 export type StudentGetRequest = TypedRequest<IdParams>;
 export type StudentCreateRequest = TypedRequest<{}, any, StudentCreateBody>;
 export type StudentUpdateRequest = TypedRequest<IdParams, any, StudentUpdateBody>;
+
+export type AdminListRequest = TypedRequest<{}, any, any, PaginationQuery>;
+export type AdminGetRequest = TypedRequest<IdParams>;
+export type AdminCreateRequest = TypedRequest<{}, any, AdminCreateBody>;
+export type AdminUpdateRequest = TypedRequest<IdParams, any, AdminUpdateBody>;
 
 export type RequestWithPagination = TypedRequest<{}, any, any, PaginationQuery>;
 export type RequestWithId = TypedRequest<IdParams>;

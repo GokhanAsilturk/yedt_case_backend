@@ -54,6 +54,7 @@ import authRoutes from './routes/auth';
 import studentRoutes from './routes/students';
 import courseRoutes from './routes/courses';
 import enrollmentRoutes from './routes/enrollments';
+import adminRoutes from './routes/admins';
 
 // API Documentation
 setupSwagger(app);
@@ -67,6 +68,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/admins', adminRoutes);
 
 // 404 handler for undefined routes
 app.use(notFoundHandler);

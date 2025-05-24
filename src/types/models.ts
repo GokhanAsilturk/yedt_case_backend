@@ -12,6 +12,17 @@ export interface IUser {
   updatedAt: Date;
 }
 
+export interface IAdmin {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IStudent {
   id: string;
   userId: string;
@@ -52,6 +63,17 @@ export interface UserModel extends Model<InferAttributes<UserModel>, InferCreati
   validatePassword(password: string): Promise<boolean>;
 }
 
+export interface AdminModel extends Model<InferAttributes<AdminModel>, InferCreationAttributes<AdminModel>> {
+  id: CreationOptional<string>;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  title: string;
+  createdAt: CreationOptional<Date>;
+  updatedAt: CreationOptional<Date>;
+}
+
 export interface StudentModel extends Model<InferAttributes<StudentModel>, InferCreationAttributes<StudentModel>> {
   id: CreationOptional<string>;
   userId: string;
@@ -86,6 +108,14 @@ export interface UserCreateInput {
   password: string;
   role: 'admin' | 'student';
   tokenVersion?: number;
+}
+
+export interface AdminCreateInput {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  title: string;
 }
 
 export interface StudentCreateInput {
