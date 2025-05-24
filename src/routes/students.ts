@@ -30,9 +30,10 @@ const router = express.Router();
  *       200:
  *         description: Student list retrieved successfully
  */
-router.get('/', 
-  auth,
-  asyncHandler(StudentController.getAllStudents)
+router.get('/',
+ auth,
+ checkRole(['admin']),
+ asyncHandler(StudentController.getAllStudents)
 );
 
 /**

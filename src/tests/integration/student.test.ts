@@ -104,6 +104,26 @@ describe('Student Integration Tests', () => {
       expect(response.body.success).toBe(false);
     });
   });
+
+  it('should reject request for getAllStudents without admin role', async () => {
+    const user = {
+      id: 'someUserId',
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password',
+      role: 'student',
+      tokenVersion: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      validatePassword: () => Promise.resolve(true),
+    } as any;
+    const token = generateAccessToken(user);
+    const response = await request(app)
+      .get('/api/students')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(403);
+  });
   
   describe('GET /api/students/:id', () => {
     it('should return a specific student by ID', async () => {

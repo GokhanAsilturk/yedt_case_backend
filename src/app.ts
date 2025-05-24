@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
@@ -72,7 +72,9 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use(notFoundHandler);
 
 // Global error handling middleware
-app.use(errorHandler);
+app.use(((err: Error, req: Request, res: Response, next: NextFunction) => {
+  errorHandler(err, req, res, next);
+}));
 
 const PORT = process.env.PORT ?? 5000;
 
