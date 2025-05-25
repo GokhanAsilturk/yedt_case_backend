@@ -16,10 +16,10 @@ export const createTestUser = async (options: CreateTestUserOptions = {}) => {
 
   const user = await User.create({
     id: userId,
-    email: options.email || defaultEmail,
-    username: options.username || defaultUsername,
+    email: options.email ?? defaultEmail,
+    username: options.username ?? defaultUsername,
     password: '123456',
-    role: options.role || 'student'
+    role: options.role ?? 'student'
   });
 
   return user;

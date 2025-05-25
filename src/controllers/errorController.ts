@@ -10,6 +10,55 @@ export class ErrorController {
     this.errorLogService = new ErrorLogService();
   }
 
+  /**
+   * @openapi
+   * /api/errors:
+   *   get:
+   *     summary: Get error logs
+   *     description: Retrieves error logs with pagination support.
+   *     tags:
+   *       - Errors
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *         description: The page number.
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 10
+   *         description: The number of items per page.
+   *     responses:
+   *       200:
+   *         description: Successful operation
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiPaginatedResponse'
+   *       400:
+   *         description: Bad Request - Invalid page or limit parameters
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
+   *       403:
+   *         description: Forbidden - User is not authorized.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
+   *       500:
+   *         description: Internal Server Error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
+   */
   getLogs = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { page, limit } = req.query;
 

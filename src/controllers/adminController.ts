@@ -17,7 +17,7 @@ import { ErrorCode } from '../error/constants/errorCodes';
 import { ErrorMessage } from '../error/constants/errorMessages';
 
 const AdminController = {
-  // List all admins (with pagination and search)
+  // List all admins
   getAllAdmins: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const page = parseInt(req.query.page ?? '1');
