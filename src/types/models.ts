@@ -135,3 +135,13 @@ export interface EnrollmentCreateInput {
   courseId: string;
   enrollmentDate: Date;
 }
+
+export interface PaginationOptions {
+  limit: number;
+  offset: number;
+}
+
+export interface PaginationResult<T> {
+  rows: T[];
+  count: number;
+}

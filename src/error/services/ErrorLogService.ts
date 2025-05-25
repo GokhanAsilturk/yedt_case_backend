@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { BaseError } from '../models/BaseError';
 import ErrorLog from '../models/ErrorLog';
+import { PaginationOptions, PaginationResult } from '../../types/models'; // Import PaginationOptions and PaginationResult
 
 export class ErrorLogService {
   async logError(error: BaseError, req: Request): Promise<void> {
@@ -23,5 +24,19 @@ export class ErrorLogService {
     } catch (dbError) {
       console.error('Hata veritabanına kaydedilirken bir hata oluştu:', dbError);
     }
+  }
+
+  async getPaginatedLogs(options: PaginationOptions): Promise<PaginationResult<any>> {
+    const { limit, offset } = options;
+    const { count, rows } = await ErrorLog.findAndCountAll({
+      order: [['timestamp', 'DESC']],
+      limit,
+      offset,
+    });
+
+    return {
+      rows,
+      count,
+    };
   }
 }
