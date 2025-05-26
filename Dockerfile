@@ -24,6 +24,8 @@ WORKDIR /app
 
 # Sadece üretim bağımlılıklarını yükle
 COPY package*.json ./
+# Disable husky and other scripts during install
+ENV npm_config_ignore_scripts=true
 RUN npm ci --only=production
 
 # Derleme aşamasından derlenen dosyaları kopyala
