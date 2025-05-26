@@ -12,7 +12,7 @@ const seedStudents = async () => {
         const studentUser = await User_1.default.create({
             username: 'gokhanasilturk',
             email: 'gokhanasilturkk@gmail.com',
-            password: 'student123!', // Doğrudan şifreyi verelim, model içinde hashlenecek
+            password: 'Student123!',
             role: 'student'
         });
         // Öğrenci bilgilerini oluştur
