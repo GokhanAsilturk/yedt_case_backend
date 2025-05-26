@@ -3,11 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Enrollment = exports.Course = exports.Student = exports.User = exports.sequelize = void 0;
+exports.Enrollment = exports.Course = exports.Admin = exports.Student = exports.User = exports.sequelize = void 0;
 const User_1 = __importDefault(require("./User"));
 exports.User = User_1.default;
 const Student_1 = __importDefault(require("./Student"));
 exports.Student = Student_1.default;
+const Admin_1 = __importDefault(require("./Admin"));
+exports.Admin = Admin_1.default;
 const Course_1 = __importDefault(require("./Course"));
 exports.Course = Course_1.default;
 const Enrollment_1 = __importDefault(require("./Enrollment"));
@@ -20,6 +22,15 @@ User_1.default.hasOne(Student_1.default, {
     as: 'studentProfile'
 });
 Student_1.default.belongsTo(User_1.default, {
+    foreignKey: 'userId',
+    as: 'userAccount'
+});
+// User - Admin İlişkisi (One-to-One)
+User_1.default.hasOne(Admin_1.default, {
+    foreignKey: 'userId',
+    as: 'adminProfile'
+});
+Admin_1.default.belongsTo(User_1.default, {
     foreignKey: 'userId',
     as: 'userAccount'
 });

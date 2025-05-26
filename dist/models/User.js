@@ -35,7 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
 const bcrypt = __importStar(require("bcryptjs"));
-const errorHandler_1 = require("../middleware/errorHandler");
+const AppError_1 = require("../error/models/AppError");
+const errorCodes_1 = require("../error/constants/errorCodes");
 const validator_1 = require("../middleware/validator");
 const database_1 = require("../config/database");
 class User extends sequelize_1.Model {
@@ -103,7 +104,7 @@ User.beforeUpdate(async (user) => {
 // Yeni kullanıcı oluşturulduğunda şifreyi hashlemek için hook
 User.beforeCreate(async (user) => {
     if (!(0, validator_1.validatePassword)(user.password)) {
-        throw new errorHandler_1.AppError('Şifre en az 8 karakter uzunluğunda olmalı, en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.', 400, errorHandler_1.ErrorCode.VALIDATION_ERROR);
+        throw new AppError_1.AppError('Şifre en az 8 karakter uzunluğunda olmalı, en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.', 400, errorCodes_1.ErrorCode.VALIDATION_ERROR);
     }
     // Daha güçlü hashing (salt faktörünü artır)
     user.password = await bcrypt.hash(user.password, 12);

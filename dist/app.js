@@ -47,6 +47,8 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const students_1 = __importDefault(require("./routes/students"));
 const courses_1 = __importDefault(require("./routes/courses"));
 const enrollments_1 = __importDefault(require("./routes/enrollments"));
+const admins_1 = __importDefault(require("./routes/admins"));
+const errors_1 = __importDefault(require("./routes/errors"));
 // API Documentation
 (0, swagger_1.setupSwagger)(app);
 app.get('/', (req, res) => {
@@ -57,10 +59,14 @@ app.use('/api/auth', auth_1.default);
 app.use('/api/students', students_1.default);
 app.use('/api/courses', courses_1.default);
 app.use('/api/enrollments', enrollments_1.default);
+app.use('/api/admins', admins_1.default);
+app.use('/api/errors', errors_1.default);
 // 404 handler for undefined routes
 app.use(middleware_1.notFoundHandler);
 // Global error handling middleware
-app.use(middleware_1.errorHandler);
+app.use(((err, req, res, next) => {
+    (0, middleware_1.errorHandler)(err, req, res, next);
+}));
 const PORT = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
 exports.default = app;
 //# sourceMappingURL=app.js.map

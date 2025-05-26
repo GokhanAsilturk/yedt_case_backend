@@ -1,21 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sanitize = sanitize;
-function sanitize(data) {
-    // Burada hassas bilgileri temizleme işlemleri gerçekleştirilir.
-    // Örneğin, parolalar, API anahtarları gibi veriler temizlenebilir.
-    if (typeof data === 'object' && data !== null) {
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                if (key.toLowerCase().includes('password') || key.toLowerCase().includes('secret') || key.toLowerCase().includes('apikey')) {
-                    data[key] = '***'; // Hassas bilgileri maskele
-                }
-                else {
-                    data[key] = sanitize(data[key]); // Rekürsif olarak iç içe objeleri temizle
-                }
-            }
-        }
+exports.ErrorTransformer = void 0;
+const BaseError_1 = require("../models/BaseError");
+const errorCodes_1 = require("../constants/errorCodes");
+class ErrorTransformer {
+    transform(err) {
+        var _a;
+        // Burada hataları dönüştürme mantığı yer alacak.
+        // Örneğin, farklı hata türlerini BaseError'a dönüştürebilirsiniz.
+        // Şimdilik, tüm hataları genel bir hata olarak ele alalım.
+        return new BaseError_1.BaseError(errorCodes_1.ErrorCode.INTERNAL_SERVER_ERROR, (_a = err.message) !== null && _a !== void 0 ? _a : 'Internal Server Error', 'critical', 500);
     }
-    return data;
 }
+exports.ErrorTransformer = ErrorTransformer;
 //# sourceMappingURL=ErrorTransformer.js.map

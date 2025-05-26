@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commonSchemas = exports.validate = exports.validatePassword = void 0;
 const joi_1 = __importDefault(require("joi"));
-const errorHandler_1 = require("./errorHandler");
+const AppError_1 = require("../error/models/AppError");
+const errorCodes_1 = require("../error/constants/errorCodes");
 const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return passwordRegex.test(password);
@@ -41,7 +42,7 @@ const validate = (schema) => {
         }
         // Hata varsa, hata yanıtı döndür
         if (validationErrors.length > 0) {
-            throw new errorHandler_1.AppError(`Doğrulama hatası: ${validationErrors.join(', ')}`, 400, errorHandler_1.ErrorCode.VALIDATION_ERROR);
+            throw new AppError_1.AppError(`Doğrulama hatası: ${validationErrors.join(', ')}`, 400, errorCodes_1.ErrorCode.VALIDATION_ERROR);
         }
         next();
     };

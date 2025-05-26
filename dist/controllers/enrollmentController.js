@@ -7,9 +7,12 @@ const Student_1 = __importDefault(require("../models/Student"));
 const Course_1 = __importDefault(require("../models/Course"));
 const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
+const AppError_1 = require("../error/models/AppError");
+const errorCodes_1 = require("../error/constants/errorCodes");
+const errorMessages_1 = require("../error/constants/errorMessages");
 const EnrollmentController = {
     // List all enrollments (with pagination)
-    getAllEnrollments: async (req, res) => {
+    getAllEnrollments: async (req, res, next) => {
         var _a, _b;
         try {
             const page = parseInt((_a = req.query.page) !== null && _a !== void 0 ? _a : '1');
@@ -33,30 +36,35 @@ const EnrollmentController = {
             apiResponse_1.default.pagination(res, enrollments, page, limit, count);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500);
+            }
         }
     },
     // Enroll logged-in student to a course
-    enrollCourse: async (req, res) => {
+    enrollCourse: async (req, res, next) => {
         try {
             const userId = req.user.id;
             const { courseId } = req.params;
             const student = await Student_1.default.findOne({ where: { userId } });
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             const course = await Course_1.default.findByPk(courseId);
             if (!course) {
-                apiResponse_1.default.error(res, 'Course not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             const existingEnrollment = await Enrollment_1.default.findOne({
                 where: { studentId: student.id, courseId }
             });
             if (existingEnrollment) {
-                apiResponse_1.default.error(res, 'Already enrolled in this course', 400);
-                return;
+                throw new AppError_1.AppError('Bu kursa zaten kayıtlısınız', 400, errorCodes_1.ErrorCode.CONFLICT);
             }
             const enrollment = await Enrollment_1.default.create({
                 studentId: student.id,
@@ -66,34 +74,48 @@ const EnrollmentController = {
             apiResponse_1.default.success(res, enrollment, 'Enrolled successfully', 201);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt işlemi sırasında bir hata oluştu', 500);
+            }
         }
     },
     // Withdraw logged-in student from a course
-    withdrawCourse: async (req, res) => {
+    withdrawCourse: async (req, res, next) => {
         try {
             const userId = req.user.id;
             const { courseId } = req.params;
             const student = await Student_1.default.findOne({ where: { userId } });
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             const enrollment = await Enrollment_1.default.findOne({
                 where: { studentId: student.id, courseId }
             });
             if (!enrollment) {
-                apiResponse_1.default.error(res, 'Enrollment not found', 404);
-                return;
+                throw new AppError_1.AppError('Kayıt bulunamadı', 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             await enrollment.destroy();
             apiResponse_1.default.success(res, null, 'Withdrawn successfully');
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt silme işlemi sırasında bir hata oluştu', 500);
+            }
         }
     },
-    getStudentEnrollments: async (req, res) => {
+    getStudentEnrollments: async (req, res, next) => {
         try {
             const { id: studentId } = req.params;
             const enrollments = await Enrollment_1.default.findAll({
@@ -108,12 +130,20 @@ const EnrollmentController = {
             apiResponse_1.default.success(res, enrollments);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci kayıtları alınırken bir hata oluştu', 500);
+            }
         }
     },
     // Get course enrollments
     getCourseEnrollments: async (req, // Use TypedRequest with IdParams
-    res) => {
+    res, next) => {
         try {
             const { id: courseId } = req.params;
             const enrollments = await Enrollment_1.default.findAll({
@@ -128,12 +158,20 @@ const EnrollmentController = {
             apiResponse_1.default.success(res, enrollments);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kurs kayıtları alınırken bir hata oluştu', 500);
+            }
         }
     },
     // Create a new enrollment
     createEnrollment: async (req, // Use TypedRequest with EnrollmentBody
-    res) => {
+    res, next) => {
         try {
             const { studentId, courseId } = req.body;
             // Check if enrollment already exists
@@ -141,8 +179,7 @@ const EnrollmentController = {
                 where: { studentId, courseId }
             });
             if (existingEnrollment) {
-                apiResponse_1.default.error(res, 'Student is already enrolled in this course', 400);
-                return;
+                throw new AppError_1.AppError('Öğrenci bu kursa zaten kayıtlı', 400, errorCodes_1.ErrorCode.CONFLICT);
             }
             // Check if student and course exist
             const [student, course] = await Promise.all([
@@ -150,12 +187,10 @@ const EnrollmentController = {
                 Course_1.default.findByPk(courseId)
             ]);
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             if (!course) {
-                apiResponse_1.default.error(res, 'Course not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             const enrollment = await Enrollment_1.default.create({
                 studentId,
@@ -165,23 +200,38 @@ const EnrollmentController = {
             apiResponse_1.default.success(res, enrollment, 'Enrollment created successfully', 201);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt oluşturulurken bir hata oluştu', 500);
+            }
         }
     },
     // Delete an enrollment
     deleteEnrollment: async (req, // Use TypedRequest with IdParams
-    res) => {
+    res, next) => {
         try {
             const enrollment = await Enrollment_1.default.findByPk(req.params.id);
             if (!enrollment) {
-                apiResponse_1.default.error(res, 'Enrollment not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             await enrollment.destroy();
             apiResponse_1.default.success(res, null, 'Enrollment deleted successfully');
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt silinirken bir hata oluştu', 500);
+            }
         }
     }
 };

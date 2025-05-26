@@ -6,8 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireRoles = exports.requirePermission = exports.auth = exports.hasPermission = exports.Permission = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
-const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
-const errorHandler_1 = require("./errorHandler");
+const AppError_1 = require("../error/models/AppError");
+const errorCodes_1 = require("../error/constants/errorCodes");
+const errorMessages_1 = require("../error/constants/errorMessages");
 // Uygulama içindeki izinler
 var Permission;
 (function (Permission) {
@@ -67,32 +68,33 @@ const auth = async (req, res, next) => {
     try {
         const token = (_a = req.header('Authorization')) === null || _a === void 0 ? void 0 : _a.replace('Bearer ', '');
         if (!token) {
-            apiResponse_1.default.error(res, 'Authentication required', 401);
-            return;
+            throw new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
         }
         const decoded = jsonwebtoken_1.default.verify(token, (_b = process.env.JWT_SECRET) !== null && _b !== void 0 ? _b : 'your-secret-key');
         // Token süresinin dolup dolmadığını kontrol et
         if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-            throw new errorHandler_1.AppError('Token süresi doldu', 401, errorHandler_1.ErrorCode.TOKEN_EXPIRED);
+            throw new AppError_1.AppError('Token süresi doldu.', 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
         }
         const user = await User_1.default.findByPk(decoded.id);
         if (!user) {
-            apiResponse_1.default.error(res, 'User not found', 401);
-            return;
+            throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
         }
         req.user = user;
         req.token = token;
         next();
     }
     catch (error) {
-        if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
-            apiResponse_1.default.error(res, 'Invalid token', 401);
+        if (error instanceof AppError_1.AppError) {
+            next(error);
+        }
+        else if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
+            next(new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED));
         }
         else if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
-            apiResponse_1.default.error(res, 'Token expired', 401);
+            next(new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED));
         }
         else {
-            apiResponse_1.default.error(res, 'Authentication failed', 401);
+            next(new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED));
         }
     }
 };
@@ -105,23 +107,23 @@ const requirePermission = (requiredPermission) => {
     return async (req, res, next) => {
         try {
             if (!req.user) {
-                throw new errorHandler_1.AppError('Yetkilendirme gerekli', 401, errorHandler_1.ErrorCode.UNAUTHORIZED);
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
             }
             const { role } = req.user;
             if (!(0, exports.hasPermission)(role, requiredPermission)) {
-                throw new errorHandler_1.AppError('Bu işlemi gerçekleştirmek için gerekli izne sahip değilsiniz', 403, errorHandler_1.ErrorCode.FORBIDDEN);
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.FORBIDDEN.tr, 403, errorCodes_1.ErrorCode.FORBIDDEN);
             }
             next();
         }
         catch (error) {
-            if (error instanceof errorHandler_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            if (error instanceof AppError_1.AppError) {
+                next(error);
             }
             else if (error instanceof Error) {
-                apiResponse_1.default.error(res, error.message, 500);
+                next(new AppError_1.AppError(error.message, 500, errorCodes_1.ErrorCode.UNAUTHORIZED));
             }
             else {
-                apiResponse_1.default.error(res, 'Yetkilendirme hatası', 500);
+                next(new AppError_1.AppError(errorMessages_1.ErrorMessage.SECURITY_ERROR.tr, 500, errorCodes_1.ErrorCode.UNAUTHORIZED));
             }
         }
     };
@@ -135,22 +137,22 @@ const requireRoles = (roles) => {
     return async (req, res, next) => {
         try {
             if (!req.user) {
-                throw new errorHandler_1.AppError('Yetkilendirme gerekli', 401, errorHandler_1.ErrorCode.UNAUTHORIZED);
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
             }
             if (!roles.includes(req.user.role)) {
-                throw new errorHandler_1.AppError('Bu işlemi gerçekleştirmek için gerekli role sahip değilsiniz', 403, errorHandler_1.ErrorCode.FORBIDDEN);
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.FORBIDDEN.tr, 403, errorCodes_1.ErrorCode.FORBIDDEN);
             }
             next();
         }
         catch (error) {
-            if (error instanceof errorHandler_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            if (error instanceof AppError_1.AppError) {
+                next(error);
             }
             else if (error instanceof Error) {
-                apiResponse_1.default.error(res, error.message, 500);
+                next(new AppError_1.AppError(error.message, 500, errorCodes_1.ErrorCode.UNAUTHORIZED));
             }
             else {
-                apiResponse_1.default.error(res, 'Yetkilendirme hatası', 500);
+                next(new AppError_1.AppError(errorMessages_1.ErrorMessage.SECURITY_ERROR.tr, 500, errorCodes_1.ErrorCode.UNAUTHORIZED));
             }
         }
     };

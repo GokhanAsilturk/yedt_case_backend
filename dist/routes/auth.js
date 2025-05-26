@@ -18,16 +18,6 @@ const loginSchema = {
         })
     }
 };
-const registerSchema = {
-    body: {
-        username: index_1.commonSchemas.username,
-        email: index_1.commonSchemas.email,
-        password: index_1.commonSchemas.password,
-        role: joi_1.default.string().valid('admin', 'student').default('student').messages({
-            'any.only': 'Rol sadece "admin" veya "student" olabilir.'
-        })
-    }
-};
 const refreshTokenSchema = {
     body: {
         refreshToken: joi_1.default.string().required().messages({
@@ -37,9 +27,9 @@ const refreshTokenSchema = {
 };
 /**
  * @swagger
- * /api/auth/login:
+ * /api/auth/admin/login:
  *   post:
- *     summary: Login user
+ *     summary: Login as an admin
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -57,19 +47,17 @@ const refreshTokenSchema = {
  *                 type: string
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Admin login successful
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', (0, index_1.validate)(loginSchema), authController_1.default.login);
+router.post('/admin/login', (0, index_1.validate)(loginSchema), authController_1.default.adminLogin);
 /**
  * @swagger
- * /api/auth/register:
+ * /api/auth/student/login:
  *   post:
- *     summary: Register new admin user
+ *     summary: Student login
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -78,24 +66,19 @@ router.post('/login', (0, index_1.validate)(loginSchema), authController_1.defau
  *             type: object
  *             required:
  *               - username
- *               - email
  *               - password
  *             properties:
  *               username:
  *                 type: string
- *               email:
- *                 type: string
  *               password:
  *                 type: string
  *     responses:
- *       201:
- *         description: Admin user registered successfully
- *       400:
- *         description: Username or email already exists
+ *       200:
+ *         description: Student login successful
  *       401:
- *         description: Unauthorized
+ *         description: Invalid credentials
  */
-router.post('/register', middleware_1.auth, (0, index_1.requireRoles)(['admin']), (0, index_1.validate)(registerSchema), authController_1.default.RegisterAdmin);
+router.post('/student/login', (0, index_1.validate)(loginSchema), authController_1.default.studentLogin);
 /**
  * @swagger
  * /api/auth/refresh-token:

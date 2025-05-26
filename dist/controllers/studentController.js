@@ -9,9 +9,12 @@ const Student_1 = __importDefault(require("../models/Student"));
 const User_1 = __importDefault(require("../models/User"));
 const Enrollment_1 = __importDefault(require("../models/Enrollment"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
+const AppError_1 = require("../error/models/AppError");
+const errorCodes_1 = require("../error/constants/errorCodes");
+const errorMessages_1 = require("../error/constants/errorMessages");
 const StudentController = {
     // List all students (with pagination and search)
-    getAllStudents: async (req, res) => {
+    getAllStudents: async (req, res, next) => {
         var _a, _b, _c;
         try {
             const page = parseInt((_a = req.query.page) !== null && _a !== void 0 ? _a : '1');
@@ -42,11 +45,20 @@ const StudentController = {
             apiResponse_1.default.pagination(res, students, page, limit, count);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500);
+            }
         }
     },
     // Get student details by ID
-    getStudentById: async (req, res) => {
+    getStudentById: async (req, res, next) => {
+        var _a, _b;
         try {
             const student = await Student_1.default.findByPk(req.params.id, {
                 include: [
@@ -58,17 +70,28 @@ const StudentController = {
                 ]
             });
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
+            }
+            // Öğrencinin kendi ID'si kontrolü
+            if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'student' && student.id !== ((_b = req.user.studentId) !== null && _b !== void 0 ? _b : req.user.id)) {
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 403, errorCodes_1.ErrorCode.FORBIDDEN);
             }
             apiResponse_1.default.success(res, student);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci bilgileri alınırken bir hata oluştu', 500);
+            }
         }
     },
     // Create a new student
-    createStudent: async (req, res) => {
+    createStudent: async (req, res, next) => {
         try {
             const { username, email, password, firstName, lastName, birthDate } = req.body;
             // Create User first
@@ -88,17 +111,24 @@ const StudentController = {
             apiResponse_1.default.success(res, { user, student }, 'Student created successfully', 201);
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci oluşturulurken bir hata oluştu', 500);
+            }
         }
     },
     // Update student details
-    updateStudent: async (req, res) => {
+    updateStudent: async (req, res, next) => {
         try {
             const { firstName, lastName, birthDate } = req.body;
             const student = await Student_1.default.findByPk(req.params.id);
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             await student.update({
                 firstName,
@@ -108,16 +138,23 @@ const StudentController = {
             apiResponse_1.default.success(res, student, 'Student updated successfully');
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500);
+            }
         }
     },
     // Delete a student
-    deleteStudent: async (req, res) => {
+    deleteStudent: async (req, res, next) => {
         try {
             const student = await Student_1.default.findByPk(req.params.id);
             if (!student) {
-                apiResponse_1.default.error(res, 'Student not found', 404);
-                return;
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
             // Transaction kullanarak silme işlemlerini gerçekleştir
             await database_1.sequelize.transaction(async (t) => {
@@ -137,7 +174,44 @@ const StudentController = {
             apiResponse_1.default.success(res, null, 'Student deleted successfully');
         }
         catch (error) {
-            apiResponse_1.default.error(res, error instanceof Error ? error.message : 'An error occurred');
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci silinirken bir hata oluştu', 500);
+            }
+        }
+    },
+    // Update student profile
+    updateStudentProfile: async (req, res, next) => {
+        var _a, _b, _c;
+        try {
+            const { firstName, lastName, birthDate } = req.body;
+            const studentId = (_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.studentId) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.id; // Assuming studentId is available in req.user
+            const student = await Student_1.default.findByPk(studentId);
+            if (!student) {
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
+            }
+            await student.update({
+                firstName,
+                lastName,
+                birthDate: birthDate ? new Date(birthDate) : undefined,
+            });
+            apiResponse_1.default.success(res, student, 'Profil başarıyla güncellendi');
+        }
+        catch (error) {
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Profil güncellenirken bir hata oluştu', 500);
+            }
         }
     }
 };

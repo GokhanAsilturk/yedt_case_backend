@@ -6,8 +6,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const studentController_1 = __importDefault(require("../controllers/studentController"));
 const middleware_1 = require("../middleware");
-const asyncHandler_1 = __importDefault(require("../utils/asyncHandler")); // Import the new asyncHandler
+const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
+const joi_1 = __importDefault(require("joi"));
 const router = express_1.default.Router();
+// Öğrenci profil güncelleme şeması
+const updateStudentProfileSchema = {
+    body: {
+        firstName: joi_1.default.string().required().messages({
+            'any.required': 'Ad alanı zorunludur.'
+        }),
+        lastName: joi_1.default.string().required().messages({
+            'any.required': 'Soyad alanı zorunludur.'
+        }),
+        birthDate: joi_1.default.date().iso().messages({
+            'date.format': 'Geçerli bir tarih formatı giriniz (YYYY-MM-DD).'
+        })
+    }
+};
 /**
  * @swagger
  * /api/students:
@@ -31,7 +46,7 @@ const router = express_1.default.Router();
  *       200:
  *         description: Student list retrieved successfully
  */
-router.get('/', middleware_1.auth, (0, asyncHandler_1.default)(studentController_1.default.getAllStudents));
+router.get('/', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0, asyncHandler_1.default)(studentController_1.default.getAllStudents));
 /**
  * @swagger
  * /api/students/{id}:
@@ -53,7 +68,19 @@ router.get('/', middleware_1.auth, (0, asyncHandler_1.default)(studentController
  *       404:
  *         description: Student not found
  */
-router.get('/:id', middleware_1.auth, (0, asyncHandler_1.default)(studentController_1.default.getStudentById));
+router.get('/:id', middleware_1.auth, (req, res, next) => {
+    var _a;
+    // Öğrencinin kendi ID'si ile eşleşme kontrolü
+    if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'student' && req.params.id !== req.user.id && req.params.id !== req.user.studentId) {
+        res.status(403).json({
+            success: false,
+            message: 'Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır.'
+        });
+    }
+    else {
+        next();
+    }
+}, (0, asyncHandler_1.default)(studentController_1.default.getStudentById));
 /**
  * @swagger
  * /api/students:
@@ -156,5 +183,46 @@ router.put('/:id', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0
  *         description: Student not found
  */
 router.delete('/:id', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0, asyncHandler_1.default)(studentController_1.default.deleteStudent));
+/**
+ * @swagger
+ * /api/students/profile:
+ *   put:
+ *     summary: Update student profile
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       404:
+ *         description: Student not found
+ */
+// Öğrenci profil güncelleme endpoint'i - Sadece öğrencinin kendi profilini güncellemesine izin verir
+router.put('/profile', middleware_1.auth, (req, res, next) => {
+    var _a;
+    if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== 'student') {
+        res.status(403).json({
+            success: false,
+            message: 'Bu işlem sadece öğrenciler tarafından yapılabilir.'
+        });
+    }
+    else {
+        next();
+    }
+}, (0, middleware_1.validate)(updateStudentProfileSchema), (0, asyncHandler_1.default)(studentController_1.default.updateStudentProfile));
 exports.default = router;
 //# sourceMappingURL=students.js.map

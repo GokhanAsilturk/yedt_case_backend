@@ -4,58 +4,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ErrorLogService = void 0;
-const uuid_1 = require("uuid");
 const ErrorLog_1 = __importDefault(require("../models/ErrorLog"));
-const ErrorTransformer_1 = require("./ErrorTransformer");
 class ErrorLogService {
-    constructor() { }
-    static getInstance() {
-        if (!ErrorLogService.instance) {
-            ErrorLogService.instance = new ErrorLogService();
-        }
-        return ErrorLogService.instance;
-    }
-    async log(options) {
+    async logError(error, req) {
+        var _a;
+        const logEntry = {
+            errorCode: error.errorCode,
+            message: error.message,
+            stackTrace: (_a = error.stack) !== null && _a !== void 0 ? _a : '',
+            severity: error.severity,
+            metadata: error.metadata || {},
+            timestamp: new Date(),
+            url: req.url,
+            method: req.method,
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+        };
         try {
-            const { severity, error, message, metadata, req, userId } = options;
-            const stackTrace = (error === null || error === void 0 ? void 0 : error.stack) || '';
-            const requestId = (req === null || req === void 0 ? void 0 : req.headers['x-request-id']) || (0, uuid_1.v4)();
-            const userAgent = req === null || req === void 0 ? void 0 : req.headers['user-agent'];
-            const ip = req === null || req === void 0 ? void 0 : req.ip;
-            const url = req === null || req === void 0 ? void 0 : req.originalUrl;
-            const method = req === null || req === void 0 ? void 0 : req.method;
-            const sanitizedMetadata = (0, ErrorTransformer_1.sanitize)(metadata || {});
-            await ErrorLog_1.default.create({
-                errorCode: (error === null || error === void 0 ? void 0 : error.name) || 'UNKNOWN_ERROR',
-                message,
-                stackTrace,
-                severity,
-                metadata: sanitizedMetadata,
-                userId,
-                requestId,
-                timestamp: new Date(),
-                userAgent,
-                ip,
-                url,
-                method,
-            });
+            await ErrorLog_1.default.create(logEntry);
+            console.log('Hata başarıyla loglandı.');
         }
         catch (dbError) {
-            console.error('Error logging to database:', dbError);
-            // Loglama hatası durumunda ek bir işlem yapılabilir (örn. dosya loglama)
+            console.error('Hata veritabanına kaydedilirken bir hata oluştu:', dbError);
         }
     }
-    async logInfo(options) {
-        await this.log({ ...options, severity: 'info' });
-    }
-    async logWarning(options) {
-        await this.log({ ...options, severity: 'warning' });
-    }
-    async logError(options) {
-        await this.log({ ...options, severity: 'error' });
-    }
-    async logCritical(options) {
-        await this.log({ ...options, severity: 'critical' });
+    async getPaginatedLogs(options) {
+        const { limit, offset } = options;
+        const { count, rows } = await ErrorLog_1.default.findAndCountAll({
+            order: [['timestamp', 'DESC']],
+            limit,
+            offset,
+        });
+        return {
+            rows,
+            count,
+        };
     }
 }
 exports.ErrorLogService = ErrorLogService;

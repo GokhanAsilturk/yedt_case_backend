@@ -92,6 +92,24 @@ describe('Student Integration Tests', () => {
             expect(response.body.success).toBe(false);
         });
     });
+    it('should reject request for getAllStudents without admin role', async () => {
+        const user = {
+            id: 'someUserId',
+            username: 'testuser',
+            email: 'test@example.com',
+            password: 'password',
+            role: 'student',
+            tokenVersion: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            validatePassword: () => Promise.resolve(true),
+        };
+        const token = (0, jwt_1.generateAccessToken)(user);
+        const response = await (0, supertest_1.default)(app_1.default)
+            .get('/api/students')
+            .set('Authorization', `Bearer ${token}`);
+        expect(response.status).toBe(403);
+    });
     describe('GET /api/students/:id', () => {
         it('should return a specific student by ID', async () => {
             const response = await (0, supertest_1.default)(app_1.default)
