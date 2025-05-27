@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
-import Student from '../models/Student'; // Student modelini ekledik
+import Student from '../models/Student';
 import ApiResponse from '../utils/apiResponse';
 import { generateTokenPair, invalidateToken } from '../utils/jwt';
 import { AppError } from '../error/models/AppError';
@@ -13,7 +13,6 @@ interface LoginRequest extends Request {
     password: string;
   };
 }
-
 
 interface RefreshTokenRequest extends Request {
   body: {
@@ -28,7 +27,7 @@ interface LogoutRequest extends Request {
   headers: {
     authorization?: string;
   };
-  user?: any; // Kullanıcı bilgisi
+  user?: any;
 }
 
 class AuthController {

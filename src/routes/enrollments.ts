@@ -1,7 +1,7 @@
 import express from 'express';
 import EnrollmentController from '../controllers/enrollmentController';
 import { auth, checkRole } from '../middleware';
-import asyncHandler from '../utils/asyncHandler'; // Import the new asyncHandler
+import asyncHandler from '../utils/asyncHandler';
 
 const router = express.Router();
 
@@ -14,7 +14,6 @@ router.delete('/student/courses/:courseId/withdraw',
   auth,
   asyncHandler(EnrollmentController.withdrawCourse)
 );
-
 
 /**
  * @swagger

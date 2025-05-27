@@ -164,7 +164,6 @@ const EnrollmentController = {
       });
       
       ApiResponse.success(res, enrollments, 'Öğrenci kayıtları başarıyla alındı');    } catch (error) {
-      console.error('Öğrenci kayıtları getirilirken hata oluştu:', error);
       if (next) {
         next(error);
       } else if (error instanceof AppError) {

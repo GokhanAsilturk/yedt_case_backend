@@ -71,15 +71,13 @@ User.init({
   tableName: 'Users'
 });
 
-// Şifre değişikliğinde güncellemek için hook
 User.beforeUpdate(async (user: User) => {
   if (user.changed('password')) {
-    user.password = await bcrypt.hash(user.password, 12); // Salt faktörünü artır (10'dan 12'ye)
-    user.tokenVersion = (user.tokenVersion || 0) + 1; // Şifre değiştiğinde token sürümünü artır
+    user.password = await bcrypt.hash(user.password, 12);
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
   }
 });
 
-// Yeni kullanıcı oluşturulduğunda şifreyi hashlemek için hook
 User.beforeCreate(async (user: User) => {
   if (!validatePassword(user.password)) {
     throw new AppError(
@@ -89,18 +87,11 @@ User.beforeCreate(async (user: User) => {
     );
   }
   
-  // Daha güçlü hashing (salt faktörünü artır)
   user.password = await bcrypt.hash(user.password, 12);
 });
 
-// Şifre doğrulama işlevini genişlet (brute force saldırılarına karşı zamanlama koruması)
 User.prototype.validatePassword = async function (password: string): Promise<boolean> {
-  // Zamanlama saldırılarına karşı koruma için sabit zamanlı karşılaştırma
   const isValid = await bcrypt.compare(password, this.password);
-  
-  // Başarısız giriş denemelerini yönetmek için eklenebilir - veritabanında field eklenmesi gerekebilir
-  // this.loginAttempts = isValid ? 0 : (this.loginAttempts || 0) + 1;
-  // await this.save();
   
   return isValid;
 };

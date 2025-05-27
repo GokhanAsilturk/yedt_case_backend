@@ -7,7 +7,6 @@ import { HttpStatusCode } from '../error/constants/httpStatusCodes';
 import ApiResponse from '../utils/apiResponse';
 import { ErrorLogService } from '../error/services/ErrorLogService';
 
-// 404 Hatası için middleware
 export const notFoundHandler = (req: Request, res: Response, next: NextFunction) => {
   const err = new BaseError(
     ErrorCode.NOT_FOUND,
@@ -18,7 +17,6 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
   next(err);
 };
 
-// Global hata yakalama middleware'i
 export const errorHandler = async (err: Error, req: Request, res: Response, next: NextFunction) => {
   const errorLogService = new ErrorLogService();
 
@@ -41,11 +39,10 @@ export const errorHandler = async (err: Error, req: Request, res: Response, next
   }
 
   if (process.env.NODE_ENV === 'production') {
-    message = 'Internal Server Error'; // Üretimde daha genel bir mesaj
-    errorDetails = undefined; // Üretimde hata detaylarını gizle
+    message = 'Internal Server Error';
+    errorDetails = undefined;
   }
 
-  // instanceof kontrolü yaptığımız için statusCode'u güvenli bir şekilde alabiliriz
   const statusCode = err instanceof BaseError ? err.statusCode : HttpStatusCode.INTERNAL_SERVER_ERROR;
   return ApiResponse.error(res, message, statusCode, errorDetails);
 };

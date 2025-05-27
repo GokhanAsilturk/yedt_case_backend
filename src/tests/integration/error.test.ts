@@ -10,7 +10,6 @@ import { ErrorCode } from '../../error/constants/errorCodes';
 import { HttpStatusCode } from '../../error/constants/httpStatusCodes';
 import * as errorUtils from '../../error/utils/errorUtils';
 
-// errorHandler için mock fonksiyon
 jest.mock('../../error/services/ErrorLogService', () => {
   return {
     ErrorLogService: jest.fn().mockImplementation(() => {

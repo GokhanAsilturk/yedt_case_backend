@@ -12,11 +12,11 @@ export interface JwtPayload {
 }
 
 // JWT yapılandırması
-const JWT_SECRET = process.env.JWT_SECRET ?? 'your-default-secret';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '1h';  // Access token için daha kısa süre
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';  // Refresh token için daha uzun süre
+const JWT_SECRET = process.env.JWT_SECRET ?? 'asdasdasdas';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '1h'; 
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';  
 
-// Blacklist - geçersiz tokenlar için, gerçek uygulamada Redis veya DB kullanılmalı
+// Blacklist - geçersiz tokenlar için, gerçek uygulamada Redis veya DB kullanılmalı.
 const invalidatedTokens = new Set<string>();
 
 /**
@@ -36,9 +36,9 @@ export const generateAccessToken = (user: UserModel): string => {
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-    algorithm: 'HS256',  // Algoritma belirtme
-    audience: 'yedt-eğitim-sistemi',  // İzleyici (hedef uygulama)
-    issuer: 'yedt-backend-api'  // Yayınlayan (kaynak uygulama)
+    algorithm: 'HS256',  
+    audience: 'yedt-eğitim-sistemi',  
+    issuer: 'yedt-backend-api'  
   } as jwt.SignOptions);
 };
 

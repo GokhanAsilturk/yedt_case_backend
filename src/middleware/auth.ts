@@ -6,34 +6,25 @@ import { AppError } from '../error/models/AppError';
 import { ErrorCode } from '../error/constants/errorCodes';
 import { ErrorMessage } from '../error/constants/errorMessages';
 
-// Uygulama içindeki izinler
 export enum Permission {
-  // Kullanıcı izinleri
   VIEW_USERS = 'view_users',
   CREATE_USER = 'create_user',
   UPDATE_USER = 'update_user',
   DELETE_USER = 'delete_user',
-  
-  // Öğrenci izinleri
   VIEW_STUDENTS = 'view_students',
   CREATE_STUDENT = 'create_student',
   UPDATE_STUDENT = 'update_student',
   DELETE_STUDENT = 'delete_student',
-  
-  // Kurs izinleri
   VIEW_COURSES = 'view_courses',
   CREATE_COURSE = 'create_course',
   UPDATE_COURSE = 'update_course',
   DELETE_COURSE = 'delete_course',
-  
-  // Kayıt izinleri
   VIEW_ENROLLMENTS = 'view_enrollments',
   CREATE_ENROLLMENT = 'create_enrollment',
   UPDATE_ENROLLMENT = 'update_enrollment',
   DELETE_ENROLLMENT = 'delete_enrollment'
 }
 
-// Her rol için izinleri tanımla
 const rolePermissions: Record<string, Permission[]> = {
   'admin': [
     Permission.VIEW_USERS, Permission.CREATE_USER, Permission.UPDATE_USER, Permission.DELETE_USER,
@@ -48,12 +39,6 @@ const rolePermissions: Record<string, Permission[]> = {
   ]
 };
 
-/**
- * Kullanıcının rolüne göre belirli izinlere sahip olup olmadığını kontrol eder
- * @param userRole Kullanıcı rolü
- * @param requiredPermission Gereken izin
- * @returns Kullanıcının izne sahip olup olmadığı
- */
 export const hasPermission = (userRole: string, requiredPermission: Permission): boolean => {
   if (!rolePermissions[userRole]) {
     return false;
@@ -62,9 +47,6 @@ export const hasPermission = (userRole: string, requiredPermission: Permission):
   return rolePermissions[userRole].includes(requiredPermission);
 };
 
-/**
- * Kullanıcı kimlik doğrulama middleware'i
- */
 export const auth: AuthMiddleware = async (
   req: AuthRequest,
   res: Response,
@@ -79,7 +61,6 @@ export const auth: AuthMiddleware = async (
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET ?? 'your-secret-key') as jwt.JwtPayload & { exp?: number };
     
-    // Token süresinin dolup dolmadığını kontrol et
     if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
       throw new AppError('Token süresi doldu.', 401, ErrorCode.UNAUTHORIZED);
     }
@@ -105,10 +86,6 @@ export const auth: AuthMiddleware = async (
   }
 };
 
-/**
- * Belirli izinlere sahip kullanıcıları doğrulayan middleware
- * @param requiredPermission Gereken izin
- */
 export const requirePermission = (requiredPermission: Permission): AuthMiddleware => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -139,10 +116,6 @@ export const requirePermission = (requiredPermission: Permission): AuthMiddlewar
   };
 };
 
-/**
- * Belirli rollere sahip kullanıcıları doğrulayan middleware
- * @param roles İzin verilen roller dizisi
- */
 export const requireRoles = (roles: string[]): AuthMiddleware => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {

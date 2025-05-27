@@ -2,13 +2,11 @@ import { Request, Response, RequestHandler } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
 
-// Base Request Type
 export interface AuthRequest extends Request {
-  user?: any; // UserModel;
+  user?: any;
   token?: string;
 }
 
-// Generic Types
 export type TypedRequest<
   P = ParamsDictionary,
   ResB = any,
@@ -25,7 +23,6 @@ export type TypedRequestHandler<
   ReqQ = ParsedQs
 > = RequestHandler<P, ResB, ReqB, ReqQ>;
 
-// Define specific interfaces for request parts
 export interface IdParams extends ParamsDictionary {
   id: string;
 }
@@ -89,7 +86,6 @@ export interface EnrollmentParams extends ParamsDictionary {
   id: string;
 }
 
-// Update Request types using the new interfaces
 export type CourseListRequest = TypedRequest<{}, any, any, PaginationQuery>;
 export type CourseGetRequest = TypedRequest<CourseParams>;
 export type CourseCreateRequest = TypedRequest<{}, any, CourseBody>;
@@ -112,7 +108,6 @@ export type AdminUpdateRequest = TypedRequest<IdParams, any, AdminUpdateBody>;
 export type RequestWithPagination = TypedRequest<{}, any, any, PaginationQuery>;
 export type RequestWithId = TypedRequest<IdParams>;
 
-// Handler Types
 export type ControllerHandler<
   P = ParamsDictionary,
   ResB = any,
@@ -127,5 +122,4 @@ export type AsyncHandler<
   ReqQ = ParsedQs
 > = RequestHandler<P, ResB, ReqB, ReqQ>;
 
-// Middleware Type
 export type AuthMiddleware = TypedRequestHandler<{}, any, any, any>;

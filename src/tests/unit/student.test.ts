@@ -7,7 +7,6 @@ import Enrollment from '../../models/Enrollment';
 import ApiResponse from '../../utils/apiResponse';
 import { sequelize } from '../../config/database';
 
-// Mock models
 jest.mock('../../models/Student');
 jest.mock('../../models/User');
 jest.mock('../../models/Enrollment');
@@ -17,7 +16,6 @@ jest.mock('../../config/database', () => ({
   }
 }));
 
-// Mock ApiResponse
 jest.mock('../../utils/apiResponse', () => ({
   success: jest.fn(),
   error: jest.fn(),
@@ -33,13 +31,11 @@ describe('StudentController', () => {
       status: jest.fn().mockReturnThis(),
     };
     
-    // Reset all mocks after each test
     jest.clearAllMocks();
   });
 
   describe('getAllStudents', () => {
     it('should return paginated students', async () => {
-      // Mock data
       const mockStudents = [
         { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } },
         { id: 2, firstName: 'Jane', lastName: 'Smith', userAccount: { username: 'janesmith', email: 'jane@example.com' } }
@@ -85,7 +81,6 @@ describe('StudentController', () => {
     });
     
     it('should apply search filters correctly', async () => {
-      // Mock data
       const mockStudents = [
         { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } }
       ];
@@ -122,7 +117,6 @@ describe('StudentController', () => {
     });
     
     it('should handle errors', async () => {
-      // Mock error
       const error = new Error('Database error');
       (Student.findAndCountAll as jest.Mock).mockRejectedValue(error);
       
@@ -144,7 +138,6 @@ describe('StudentController', () => {
   
   describe('getStudentById', () => {
     it('should return student by id', async () => {
-      // Mock student
       const mockStudent = { 
         id: 1, 
         firstName: 'John', 
@@ -217,7 +210,6 @@ describe('StudentController', () => {
   
   describe('createStudent', () => {
     it('should create student successfully', async () => {
-      // Mock user and student
       const mockUser = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'student' };
       const mockStudent = { id: 1, userId: 1, firstName: 'John', lastName: 'Doe' };
       
@@ -285,7 +277,6 @@ describe('StudentController', () => {
   
   describe('updateStudent', () => {
     it('should update student successfully', async () => {
-      // Mock student
       const mockStudent = { 
         id: 1, 
         firstName: 'John', 
@@ -368,7 +359,6 @@ describe('StudentController', () => {
   
   describe('deleteStudent', () => {
     it('should delete student successfully', async () => {
-      // Mock student
       const mockStudent = { 
         id: 1, 
         userId: 1,

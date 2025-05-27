@@ -132,8 +132,6 @@ export interface CourseCreateInput {
 
 export interface EnrollmentCreateInput {
   studentId: string;
-  courseId: string;
-  enrollmentDate: Date;
 }
 
 export interface PaginationOptions {

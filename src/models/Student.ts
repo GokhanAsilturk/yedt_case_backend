@@ -49,7 +49,6 @@ const Student = sequelize.define<StudentModel>(
   }
 );
 
-// Set up associations
 Student.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 export default Student;

@@ -53,7 +53,6 @@ const Admin = sequelize.define<AdminModel>(
   }
 );
 
-// Set up associations
 Admin.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 export default Admin;

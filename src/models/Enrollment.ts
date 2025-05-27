@@ -51,11 +51,9 @@ const Enrollment = sequelize.define<EnrollmentModel>(
   }
 );
 
-// Set up many-to-many relationship between Student and Course
 Student.belongsToMany(Course, { through: Enrollment, foreignKey: 'studentId', as: 'courses' });
 Course.belongsToMany(Student, { through: Enrollment, foreignKey: 'courseId', as: 'students' });
 
-// Set up direct associations for eager loading
 Enrollment.belongsTo(Student, { foreignKey: 'studentId', as: 'student' });
 Enrollment.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 

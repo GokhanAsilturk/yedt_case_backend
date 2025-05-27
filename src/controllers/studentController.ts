@@ -11,8 +11,7 @@ import { ErrorCode } from '../error/constants/errorCodes';
 import { ErrorMessage } from '../error/constants/errorMessages';
 
 const StudentController = {
-  // List all students (with pagination and search)
-  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response, next?: NextFunction): Promise<void> => { // Use PaginationQuery and SearchQuery
+  getAllStudents: async (req: TypedRequest<{}, any, any, PaginationQuery & SearchQuery>, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
@@ -33,7 +32,7 @@ const StudentController = {
         include: [
           {
             model: User,
-            as: 'userAccount', // Updated alias to match model association
+            as: 'userAccount',
             attributes: ['username', 'email', 'role']
           }
         ],
@@ -54,14 +53,13 @@ const StudentController = {
     }
   },
 
-  // Get student details by ID
   getStudentById: async (req: Request & { user?: any }, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const student = await Student.findByPk(req.params.id, {
         include: [
           {
             model: User,
-            as: 'userAccount', // Updated alias to match model association
+            as: 'userAccount',
             attributes: ['username', 'email', 'role']
           }
         ]
@@ -71,7 +69,6 @@ const StudentController = {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
   
-      // Öğrencinin kendi ID'si kontrolü
       if (req.user?.role === 'student' && student.id !== (req.user.studentId ?? req.user.id)) {
         throw new AppError(ErrorMessage.UNAUTHORIZED.tr, 403, ErrorCode.FORBIDDEN);
       }
@@ -88,26 +85,23 @@ const StudentController = {
     }
   },
 
-  // Create a new student
-  createStudent: async (req: TypedRequest<{}, any, StudentCreateBody>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with StudentCreateBody
+  createStudent: async (req: TypedRequest<{}, any, StudentCreateBody>, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const { username, email, password, firstName, lastName, birthDate } = req.body;
 
-      // Create User first
       const user = await User.create({
         username,
         email,
         password,
         role: 'student'
-      } as any); // Type assertion needed due to Sequelize typing limitations
+      } as any);
 
-      // Then create Student
       const student = await Student.create({
         userId: user.id,
         firstName,
         lastName,
         birthDate: new Date(birthDate)
-      } as any); // Type assertion needed due to Sequelize typing limitations
+      } as any);
 
       ApiResponse.success(res, { user, student }, 'Student created successfully', 201);
     } catch (error) {
@@ -121,8 +115,7 @@ const StudentController = {
     }
   },
 
-  // Update student details
-  updateStudent: async (req: TypedRequest<IdParams, any, StudentUpdateBody>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams and StudentUpdateBody
+  updateStudent: async (req: TypedRequest<IdParams, any, StudentUpdateBody>, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const { firstName, lastName, birthDate } = req.body;
       const student = await Student.findByPk(req.params.id);
@@ -134,7 +127,7 @@ const StudentController = {
       await student.update({
         firstName,
         lastName,
-        birthDate: birthDate ? new Date(birthDate) : undefined // Handle optional birthDate
+        birthDate: birthDate ? new Date(birthDate) : undefined
       });
 
       ApiResponse.success(res, student, 'Student updated successfully');
@@ -149,8 +142,7 @@ const StudentController = {
     }
   },
 
-  // Delete a student
-  deleteStudent: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => { // Use TypedRequest with IdParams
+  deleteStudent: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const student = await Student.findByPk(req.params.id);
 
@@ -158,18 +150,14 @@ const StudentController = {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
-      // Transaction kullanarak silme işlemlerini gerçekleştir
       await sequelize.transaction(async (t: Transaction) => {
-        // Önce enrollment kayıtlarını sil
         await Enrollment.destroy({
           where: { studentId: student.id },
           transaction: t
         });
 
-        // Sonra öğrenciyi sil
         await student.destroy({ transaction: t });
 
-        // En son user'ı sil
         await User.destroy({
           where: { id: student.userId },
           transaction: t
@@ -188,11 +176,10 @@ const StudentController = {
     }
   },
   
-  // Update student profile
   updateStudentProfile: async (req: Request & { user?: any } & { body: StudentUpdateBody }, res: Response, next?: NextFunction): Promise<void> => {
     try {
       const { firstName, lastName, birthDate } = req.body;
-      const studentId = req.user?.studentId ?? req.user?.id; // Assuming studentId is available in req.user
+      const studentId = req.user?.studentId ?? req.user?.id;
       const student = await Student.findByPk(studentId);
 
       if (!student) {

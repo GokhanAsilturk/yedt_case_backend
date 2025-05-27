@@ -7,6 +7,7 @@ export const validatePassword = (password: string): boolean => {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return passwordRegex.test(password);
 };
+
 type SchemaType = Record<string, Joi.Schema>;
 
 export interface ValidationSchema {
@@ -15,15 +16,10 @@ export interface ValidationSchema {
   params?: SchemaType;
 }
 
-/**
- * Joi validasyon şemalarını kullanarak request validation gerçekleştiren middleware
- * @param schema Doğrulama için kullanılacak Joi şema nesnesi
- */
 export const validate = (schema: ValidationSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const validationErrors: string[] = [];
 
-    // Request body doğrulama
     if (schema.body) {
       const { error } = Joi.object(schema.body).validate(req.body, { abortEarly: false });
       
@@ -32,7 +28,6 @@ export const validate = (schema: ValidationSchema) => {
       }
     }
 
-    // Request query doğrulama
     if (schema.query) {
       const { error } = Joi.object(schema.query).validate(req.query, { abortEarly: false });
       
@@ -41,7 +36,6 @@ export const validate = (schema: ValidationSchema) => {
       }
     }
 
-    // Request params doğrulama
     if (schema.params) {
       const { error } = Joi.object(schema.params).validate(req.params, { abortEarly: false });
       
@@ -50,7 +44,6 @@ export const validate = (schema: ValidationSchema) => {
       }
     }
 
-    // Hata varsa, hata yanıtı döndür
     if (validationErrors.length > 0) {
       throw new AppError(
         `Doğrulama hatası: ${validationErrors.join(', ')}`,
@@ -63,7 +56,6 @@ export const validate = (schema: ValidationSchema) => {
   };
 };
 
-// Ortak kullanılacak Joi şemaları
 export const commonSchemas = {
   id: Joi.string().uuid().required().messages({
     'string.guid': 'Geçersiz ID formatı. UUID olmalıdır.',

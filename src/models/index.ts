@@ -5,7 +5,6 @@ import Course from './Course';
 import Enrollment from './Enrollment';
 import { sequelize } from '../config/database';
 
-// User - Student İlişkisi (One-to-One)
 User.hasOne(Student, {
   foreignKey: 'userId',
   as: 'studentProfile'
@@ -15,7 +14,6 @@ Student.belongsTo(User, {
   as: 'userAccount'
 });
 
-// User - Admin İlişkisi (One-to-One)
 User.hasOne(Admin, {
   foreignKey: 'userId',
   as: 'adminProfile'
@@ -25,7 +23,6 @@ Admin.belongsTo(User, {
   as: 'userAccount'
 });
 
-// Student - Course İlişkisi (Many-to-Many through Enrollment)
 Student.belongsToMany(Course, {
   through: Enrollment,
   foreignKey: 'studentId',
@@ -40,7 +37,6 @@ Course.belongsToMany(Student, {
   as: 'enrolledStudents'
 });
 
-// Student - Enrollment İlişkisi
 Student.hasMany(Enrollment, {
   foreignKey: 'studentId',
   as: 'studentEnrollments'
@@ -50,7 +46,6 @@ Enrollment.belongsTo(Student, {
   as: 'enrolledStudent'
 });
 
-// Course - Enrollment İlişkisi
 Course.hasMany(Enrollment, {
   foreignKey: 'courseId',
   as: 'courseEnrollments'
