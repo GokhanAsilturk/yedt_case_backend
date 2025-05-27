@@ -65,7 +65,33 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Admin login successful
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "username": "admin1",
+      "email": "admin@example.com",
+      "role": "admin"
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
 - **401:** Invalid credentials
+```json
+{
+  "success": false,
+  "message": "Geçersiz kimlik bilgileri.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
 
 ---
 
@@ -83,7 +109,33 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student login successful
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "user": {
+      "id": "",
+      "username": "gokhanasilturk",
+      "email": "gokhanasilturkk@gmail.com",
+      "role": "student"
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
 - **401:** Invalid credentials
+```json
+{
+  "success": false,
+  "message": "Geçersiz kimlik bilgileri.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
 
 ---
 
@@ -100,7 +152,26 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** New access token generated
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
 - **401:** Invalid or expired refresh token
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
 
 ---
 
@@ -117,7 +188,24 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Successfully logged out
+```json
+{
+  "success": true,
+  "message": "Başarıyla çıkış yapıldı",
+  "data": null
+}
+```
+
 - **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
 
 ---
 
@@ -133,6 +221,56 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student list retrieved successfully (Paginated)
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "firstName": "Gökhan",
+      "lastName": "Aşiltürk",
+      "birthDate": "1995-05-15",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z",
+      "User": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "username": "gokhanasilturk",
+        "email": "gokhan@example.com",
+        "role": "student"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "pages": 3
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
@@ -145,8 +283,43 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student details retrieved successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "firstName": "Gökhan",
+    "lastName": "Aşiltürk",
+    "birthDate": "1995-05-15",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
 - **403:** Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır
+```json
+{
+  "success": false,
+  "message": "Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Student not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 **Response Data:**
 ```json
@@ -181,6 +354,54 @@ Authorization: Bearer <token>
 
 **Response:**
 - **201:** Student created successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "student": {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "userId": "550e8400-e29b-41d4-a716-446655440004",
+      "firstName": "Ahmet",
+      "lastName": "Yılmaz",
+      "birthDate": "1998-03-20",
+      "createdAt": "2024-01-15T11:30:00.000Z",
+      "updatedAt": "2024-01-15T11:30:00.000Z"
+    },
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "username": "ahmetyilmaz",
+      "email": "ahmet@example.com",
+      "role": "student"
+    }
+  }
+}
+```
+
+- **400:** Bad Request - Validation error
+```json
+{
+  "success": false,
+  "message": "Doğrulama hatası.",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "details": {
+      "email": "Email alanı geçerli bir email adresi olmalıdır."
+    }
+  }
+}
+```
+
+- **409:** Conflict - Username or email already exists
+```json
+{
+  "success": false,
+  "message": "Bu kullanıcı adı zaten kullanılıyor",
+  "error": {
+    "code": "CONFLICT"
+  }
+}
+```
 
 ---
 
@@ -202,7 +423,32 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student updated successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "firstName": "Gökhan Güncel",
+    "lastName": "Aşiltürk",
+    "birthDate": "1995-05-15",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T12:45:00.000Z"
+  }
+}
+```
+
 - **404:** Student not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -215,7 +461,24 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student deleted successfully
+```json
+{
+  "success": true,
+  "message": "Öğrenci başarıyla silindi",
+  "data": null
+}
+```
+
 - **404:** Student not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -234,8 +497,43 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Profile updated successfully
+```json
+{
+  "success": true,
+  "message": "Profil başarıyla güncellendi",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "firstName": "Gökhan Güncel",
+    "lastName": "Aşiltürk Güncel",
+    "birthDate": "1995-05-15",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T13:15:00.000Z"
+  }
+}
+```
+
 - **403:** Bu işlem sadece öğrenciler tarafından yapılabilir
+```json
+{
+  "success": false,
+  "message": "Bu işlem sadece öğrenciler tarafından yapılabilir",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Student not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -317,8 +615,41 @@ Authorization: Bearer <token>
 
 **Response:**
 - **201:** Course created successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "name": "Matematik 101",
+    "description": "Temel matematik dersi",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
 - **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
 - **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
@@ -339,9 +670,52 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Course updated successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "name": "Matematik 102 Güncel",
+    "description": "Gelişmiş matematik dersi",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-16T10:30:00.000Z"
+  }
+}
+```
+
 - **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
 - **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Course not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -354,9 +728,46 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Course deleted successfully
+```json
+{
+  "success": true,
+  "message": "Kurs başarıyla silindi",
+  "data": null
+}
+```
+
 - **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
 - **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Course not found
+```json
+{
+  "success": false,
+  "message": "Kaynak bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -371,6 +782,42 @@ Authorization: Bearer <token>
 
 **Response:**
 - **201:** Enrollment successful
+```json
+{
+  "success": true,
+  "message": "Kursa başarıyla kaydoldunuz",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440020",
+    "studentId": "550e8400-e29b-41d4-a716-446655440002",
+    "courseId": "550e8400-e29b-41d4-a716-446655440010",
+    "enrollmentDate": "2024-01-15T15:00:00.000Z",
+    "createdAt": "2024-01-15T15:00:00.000Z",
+    "updatedAt": "2024-01-15T15:00:00.000Z"
+  }
+}
+```
+
+- **400:** Bad Request
+```json
+{
+  "success": false,
+  "message": "Bu kursa zaten kayıtlısınız",
+  "error": {
+    "code": "BAD_REQUEST"
+  }
+}
+```
+
+- **404:** Course not found
+```json
+{
+  "success": false,
+  "message": "Kurs bulunamadı",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -383,6 +830,35 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Withdrawal successful
+```json
+{
+  "success": true,
+  "message": "Kurstan başarıyla ayrıldınız",
+  "data": null
+}
+```
+
+- **400:** Bad Request
+```json
+{
+  "success": false,
+  "message": "Bu kursa kayıtlı değilsiniz",
+  "error": {
+    "code": "BAD_REQUEST"
+  }
+}
+```
+
+- **404:** Course not found
+```json
+{
+  "success": false,
+  "message": "Kurs bulunamadı",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -396,6 +872,59 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Enrollment list retrieved successfully (Paginated)
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "studentId": "550e8400-e29b-41d4-a716-446655440002",
+      "courseId": "550e8400-e29b-41d4-a716-446655440010",
+      "enrollmentDate": "2024-01-15T15:00:00.000Z",
+      "createdAt": "2024-01-15T15:00:00.000Z",
+      "updatedAt": "2024-01-15T15:00:00.000Z",
+      "Student": {
+        "id": "550e8400-e29b-41d4-a716-446655440002",
+        "firstName": "Gökhan",
+        "lastName": "Aşiltürk"
+      },
+      "Course": {
+        "id": "550e8400-e29b-41d4-a716-446655440010",
+        "name": "Matematik 101"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 45,
+    "pages": 5
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
@@ -408,6 +937,49 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Student enrollments retrieved successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "studentId": "550e8400-e29b-41d4-a716-446655440002",
+      "courseId": "550e8400-e29b-41d4-a716-446655440010",
+      "enrollmentDate": "2024-01-15T15:00:00.000Z",
+      "createdAt": "2024-01-15T15:00:00.000Z",
+      "updatedAt": "2024-01-15T15:00:00.000Z",
+      "Course": {
+        "id": "550e8400-e29b-41d4-a716-446655440010",
+        "name": "Matematik 101",
+        "description": "Temel matematik dersi"
+      }
+    }
+  ]
+}
+```
+
+- **403:** Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır
+```json
+{
+  "success": false,
+  "message": "Bu öğrenci bilgilerine erişim yetkiniz bulunmamaktadır",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
+- **404:** Student not found
+```json
+{
+  "success": false,
+  "message": "Öğrenci bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -420,12 +992,48 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Course enrollments retrieved successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "studentId": "550e8400-e29b-41d4-a716-446655440002",
+      "courseId": "550e8400-e29b-41d4-a716-446655440010",
+      "enrollmentDate": "2024-01-15T15:00:00.000Z",
+      "createdAt": "2024-01-15T15:00:00.000Z",
+      "updatedAt": "2024-01-15T15:00:00.000Z",
+      "Student": {
+        "id": "550e8400-e29b-41d4-a716-446655440002",
+        "firstName": "Gökhan",
+        "lastName": "Aşiltürk",
+        "User": {
+          "username": "gokhanasilturk",
+          "email": "gokhan@example.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+- **404:** Course not found
+```json
+{
+  "success": false,
+  "message": "Kurs bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
 ### POST /api/enrollments
 **Açıklama:** Yeni kayıt oluştur  
-**Kimlik Doğrulama:** Bearer Token  
+**Kimlik Doğrulama:** Bearer Token (Admin only) 
 
 **Request Body:**
 ```json
@@ -437,18 +1045,97 @@ Authorization: Bearer <token>
 
 **Response:**
 - **201:** Enrollment created successfully
+```json
+{
+  "success": true,
+  "message": "Kayıt başarıyla oluşturuldu",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440021",
+    "studentId": "550e8400-e29b-41d4-a716-446655440003",
+    "courseId": "550e8400-e29b-41d4-a716-446655440010",
+    "enrollmentDate": "2024-01-16T10:00:00.000Z",
+    "createdAt": "2024-01-16T10:00:00.000Z", 
+    "updatedAt": "2024-01-16T10:00:00.000Z"
+  }
+}
+```
+
+- **400:** Bad Request - Validation error
+```json
+{
+  "success": false,
+  "message": "Doğrulama hatası.",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "details": {
+      "studentId": "Öğrenci ID alanı zorunludur."
+    }
+  }
+}
+```
+
+- **409:** Conflict - Student already enrolled
+```json
+{
+  "success": false,
+  "message": "Bu öğrenci zaten bu kursa kayıtlı",
+  "error": {
+    "code": "CONFLICT"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
 ### DELETE /api/enrollments/{id}
 **Açıklama:** Kayıt sil  
-**Kimlik Doğrulama:** Bearer Token  
+**Kimlik Doğrulama:** Bearer Token (Admin only)
 
 **Path Parameters:**
 - `id` (string, required): Enrollment ID
 
 **Response:**
 - **200:** Enrollment deleted successfully
+```json
+{
+  "success": true,
+  "message": "Kayıt başarıyla silindi",
+  "data": null
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
+- **404:** Enrollment not found
+```json
+{
+  "success": false,
+  "message": "Kayıt bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -464,6 +1151,58 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Admin list retrieved successfully (Paginated)
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440030",
+      "userId": "550e8400-e29b-41d4-a716-446655440031",
+      "firstName": "Admin",
+      "lastName": "User",
+      "department": "IT",
+      "title": "System Administrator",
+      "createdAt": "2024-01-10T08:00:00.000Z",
+      "updatedAt": "2024-01-10T08:00:00.000Z",
+      "User": {
+        "id": "550e8400-e29b-41d4-a716-446655440031",
+        "username": "adminuser",
+        "email": "admin@example.com",
+        "role": "admin"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 3,
+    "pages": 1
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
@@ -476,7 +1215,59 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Admin details retrieved successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440030",
+    "userId": "550e8400-e29b-41d4-a716-446655440031",
+    "firstName": "Admin",
+    "lastName": "User",
+    "department": "IT",
+    "title": "System Administrator",
+    "createdAt": "2024-01-10T08:00:00.000Z",
+    "updatedAt": "2024-01-10T08:00:00.000Z",
+    "User": {
+      "username": "adminuser",
+      "email": "admin@example.com"
+    }
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Admin not found
+```json
+{
+  "success": false,
+  "message": "Admin bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -499,6 +1290,66 @@ Authorization: Bearer <token>
 
 **Response:**
 - **201:** Admin created successfully
+```json
+{
+  "success": true,
+  "message": "Admin başarıyla oluşturuldu",
+  "data": {
+    "admin": {
+      "id": "550e8400-e29b-41d4-a716-446655440032",
+      "userId": "550e8400-e29b-41d4-a716-446655440033",
+      "firstName": "Yeni",
+      "lastName": "Admin",
+      "department": "Eğitim",
+      "title": "Eğitim Koordinatörü",
+      "createdAt": "2024-01-17T09:00:00.000Z",
+      "updatedAt": "2024-01-17T09:00:00.000Z"
+    },
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440033",
+      "username": "yeniadmin",
+      "email": "yeni@admin.com",
+      "role": "admin"
+    }
+  }
+}
+```
+
+- **400:** Bad Request - Validation error
+```json
+{
+  "success": false,
+  "message": "Doğrulama hatası.",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "details": {
+      "email": "Email alanı geçerli bir email adresi olmalıdır."
+    }
+  }
+}
+```
+
+- **409:** Conflict - Username or email already exists
+```json
+{
+  "success": false,
+  "message": "Bu kullanıcı adı zaten kullanılıyor",
+  "error": {
+    "code": "CONFLICT"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
@@ -521,7 +1372,55 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Admin updated successfully
+```json
+{
+  "success": true,
+  "message": "Admin başarıyla güncellendi",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440030",
+    "userId": "550e8400-e29b-41d4-a716-446655440031",
+    "firstName": "Güncel",
+    "lastName": "Admin",
+    "department": "IT Yönetimi",
+    "title": "Senior System Administrator",
+    "createdAt": "2024-01-10T08:00:00.000Z",
+    "updatedAt": "2024-01-17T10:30:00.000Z"
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Admin not found
+```json
+{
+  "success": false,
+  "message": "Admin bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -534,7 +1433,46 @@ Authorization: Bearer <token>
 
 **Response:**
 - **200:** Admin deleted successfully
+```json
+{
+  "success": true,
+  "message": "Admin başarıyla silindi",
+  "data": null
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
+
 - **404:** Admin not found
+```json
+{
+  "success": false,
+  "message": "Admin bulunamadı.",
+  "error": {
+    "code": "NOT_FOUND"
+  }
+}
+```
 
 ---
 
@@ -544,8 +1482,61 @@ Authorization: Bearer <token>
 **Açıklama:** Hata loglarını getir  
 **Kimlik Doğrulama:** Bearer Token (Admin only)  
 
+**Query Parameters:**
+- `page` (integer, optional): Sayfa numarası
+- `limit` (integer, optional): Sayfa başına hata log sayısı
+
 **Response:**
 - **200:** Error logs retrieved successfully
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440050",
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "errorCode": "NOT_FOUND",
+      "errorMessage": "Kaynak bulunamadı.",
+      "requestPath": "/api/courses/999",
+      "requestMethod": "GET",
+      "requestPayload": null,
+      "stackTrace": "Error: Kurs bulunamadı\n    at CourseController.getCourseById (/app/src/controllers/courseController.ts:45:11)...",
+      "errorType": "NOT_FOUND",
+      "createdAt": "2024-01-15T11:20:00.000Z",
+      "updatedAt": "2024-01-15T11:20:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "pages": 3
+  }
+}
+```
+
+- **401:** Unauthorized
+```json
+{
+  "success": false,
+  "message": "Yetkisiz erişim.",
+  "error": {
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+- **403:** Forbidden - Admin access required
+```json
+{
+  "success": false,
+  "message": "Bu kaynağa erişim izniniz yok.",
+  "error": {
+    "code": "FORBIDDEN"
+  }
+}
+```
 
 ---
 
