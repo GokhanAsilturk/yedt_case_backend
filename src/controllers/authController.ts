@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
+import Student from '../models/Student'; // Student modelini ekledik
 import ApiResponse from '../utils/apiResponse';
 import { generateTokenPair, invalidateToken } from '../utils/jwt';
 import { AppError } from '../error/models/AppError';
@@ -31,49 +32,6 @@ interface LogoutRequest extends Request {
 }
 
 class AuthController {
-  static async login(req: LoginRequest, res: Response, next?: NextFunction): Promise<void> {
-    try {
-      const { username, password } = req.body;
-      const user = await User.findOne({ where: { username } });
-
-      if (!user) {
-        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
-      }
-      
-      const isValidPassword = await user.validatePassword(password);
-      
-      if (!isValidPassword) {
-        throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
-      }
-
-      // Access ve refresh token çifti oluştur
-      const { accessToken, refreshToken } = generateTokenPair(user);
-      
-      // Hassas kullanıcı bilgilerini çıkar
-      const safeUser = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      };
-      
-      ApiResponse.success(res, {
-        user: safeUser,
-        accessToken,
-        refreshToken
-      });
-    } catch (error) {
-      if (next) {
-        next(error);
-      } else if (error instanceof AppError) {
-          ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
-        } else {
-          ApiResponse.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
-        }
-    }
-  }
-
-  
   /**
    * Refresh token kullanarak yeni bir access token oluşturur
    */
@@ -159,7 +117,7 @@ class AuthController {
       const { accessToken, refreshToken } = generateTokenPair(user);
 
       const safeUser = {
-        id: user.id,
+        userId: user.id,
         username: user.username,
         email: user.email,
         role: user.role
@@ -196,20 +154,29 @@ class AuthController {
         throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
       }
 
-      const { accessToken, refreshToken } = generateTokenPair(user);
-
-      const safeUser = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      };
-
-      ApiResponse.success(res, {
-        user: safeUser,
+      // Öğrenci kaydını bul
+      const student = await Student.findOne({ where: { userId: user.id } });
+      
+      if (!student) {
+        throw new AppError('Öğrenci kaydı bulunamadı', 404, ErrorCode.NOT_FOUND);
+      }      const { accessToken, refreshToken } = generateTokenPair(user);      
+      
+      const responseData = {
+        user: {
+          id: student.id,
+          userId: user.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        },
         accessToken,
         refreshToken
-      });
+      };
+
+      // ApiResponse kullanarak yanıtı gönderelim
+      ApiResponse.success(res, responseData);
     } catch (error) {
       if (next) {
         next(error);

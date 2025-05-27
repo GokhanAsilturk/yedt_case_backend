@@ -115,21 +115,31 @@ const EnrollmentController = {
             }
         }
     },
+    // Öğrenci kayıtlarını getiren endpoint - studentId kullanarak
     getStudentEnrollments: async (req, res, next) => {
         try {
-            const { id: studentId } = req.params;
+            const studentId = req.params.id;
+            // Öğrencinin varlığını kontrol et
+            const student = await Student_1.default.findByPk(studentId);
+            if (!student) {
+                res.status(404).json({ message: 'Öğrenci bulunamadı' });
+                return;
+            }
+            // Öğrenciye ait kayıtları getir
             const enrollments = await Enrollment_1.default.findAll({
                 where: { studentId },
                 include: [
                     {
                         model: Course_1.default,
-                        as: 'course'
+                        as: 'course',
+                        attributes: ['id', 'name', 'description']
                     }
                 ]
             });
-            apiResponse_1.default.success(res, enrollments);
+            apiResponse_1.default.success(res, enrollments, 'Öğrenci kayıtları başarıyla alındı');
         }
         catch (error) {
+            console.error('Öğrenci kayıtları getirilirken hata oluştu:', error);
             if (next) {
                 next(error);
             }
@@ -137,7 +147,7 @@ const EnrollmentController = {
                 apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
             }
             else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci kayıtları alınırken bir hata oluştu', 500);
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci kayıtları getirilirken bir hata oluştu', 500);
             }
         }
     },

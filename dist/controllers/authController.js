@@ -37,50 +37,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = __importDefault(require("../models/User"));
+const Student_1 = __importDefault(require("../models/Student")); // Student modelini ekledik
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const jwt_1 = require("../utils/jwt");
 const AppError_1 = require("../error/models/AppError");
 const errorCodes_1 = require("../error/constants/errorCodes");
 const errorMessages_1 = require("../error/constants/errorMessages");
 class AuthController {
-    static async login(req, res, next) {
-        try {
-            const { username, password } = req.body;
-            const user = await User_1.default.findOne({ where: { username } });
-            if (!user) {
-                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.INVALID_CREDENTIALS.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
-            }
-            const isValidPassword = await user.validatePassword(password);
-            if (!isValidPassword) {
-                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.INVALID_CREDENTIALS.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
-            }
-            // Access ve refresh token çifti oluştur
-            const { accessToken, refreshToken } = (0, jwt_1.generateTokenPair)(user);
-            // Hassas kullanıcı bilgilerini çıkar
-            const safeUser = {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            };
-            apiResponse_1.default.success(res, {
-                user: safeUser,
-                accessToken,
-                refreshToken
-            });
-        }
-        catch (error) {
-            if (next) {
-                next(error);
-            }
-            else if (error instanceof AppError_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
-            }
-            else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Bir hata oluştu', 500);
-            }
-        }
-    }
     /**
      * Refresh token kullanarak yeni bir access token oluşturur
      */
@@ -155,7 +118,7 @@ class AuthController {
             }
             const { accessToken, refreshToken } = (0, jwt_1.generateTokenPair)(user);
             const safeUser = {
-                id: user.id,
+                userId: user.id,
                 username: user.username,
                 email: user.email,
                 role: user.role
@@ -189,18 +152,27 @@ class AuthController {
             if (!isValidPassword) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.INVALID_CREDENTIALS.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
             }
+            // Öğrenci kaydını bul
+            const student = await Student_1.default.findOne({ where: { userId: user.id } });
+            if (!student) {
+                throw new AppError_1.AppError('Öğrenci kaydı bulunamadı', 404, errorCodes_1.ErrorCode.NOT_FOUND);
+            }
             const { accessToken, refreshToken } = (0, jwt_1.generateTokenPair)(user);
-            const safeUser = {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            };
-            apiResponse_1.default.success(res, {
-                user: safeUser,
+            const responseData = {
+                user: {
+                    id: student.id,
+                    userId: user.id,
+                    firstName: student.firstName,
+                    lastName: student.lastName,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                },
                 accessToken,
                 refreshToken
-            });
+            };
+            // ApiResponse kullanarak yanıtı gönderelim
+            apiResponse_1.default.success(res, responseData);
         }
         catch (error) {
             if (next) {

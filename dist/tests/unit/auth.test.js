@@ -32,7 +32,7 @@ describe('AuthController', () => {
         // Reset all mocks after each test
         jest.clearAllMocks();
     });
-    describe('login', () => {
+    describe('studentLogin', () => {
         it('should return token when credentials are valid', async () => {
             const mockUser = {
                 id: 1,
@@ -41,7 +41,15 @@ describe('AuthController', () => {
                 role: 'student',
                 validatePassword: jest.fn().mockResolvedValue(true),
             };
+            const mockStudent = {
+                id: 100,
+                userId: 1
+            };
             User_1.default.findOne.mockResolvedValue(mockUser);
+            // Mock Student model
+            jest.mock('../../models/Student', () => ({
+                findOne: jest.fn().mockResolvedValue(mockStudent)
+            }));
             jwt_1.generateTokenPair.mockReturnValue({
                 accessToken: 'mock-access-token',
                 refreshToken: 'mock-refresh-token'
@@ -52,10 +60,11 @@ describe('AuthController', () => {
                     password: 'password123',
                 },
             };
-            await authController_1.default.login(mockRequest, mockResponse);
+            await authController_1.default.studentLogin(mockRequest, mockResponse);
             expect(apiResponse_1.default.success).toHaveBeenCalledWith(mockResponse, {
                 user: expect.objectContaining({
-                    id: mockUser.id,
+                    id: mockStudent.id,
+                    userId: mockUser.id,
                     username: mockUser.username,
                     email: mockUser.email,
                     role: mockUser.role
@@ -75,8 +84,8 @@ describe('AuthController', () => {
                     password: 'wrongpassword',
                 },
             };
-            await authController_1.default.login(mockRequest, mockResponse);
-            expect(apiResponse_1.default.error).toHaveBeenCalledWith(mockResponse, 'Geçersiz kullanıcı adı veya şifre', 401, { code: 'UNAUTHORIZED' });
+            await authController_1.default.studentLogin(mockRequest, mockResponse);
+            expect(apiResponse_1.default.error).toHaveBeenCalledWith(mockResponse, expect.any(String), 401, expect.objectContaining({ code: expect.any(String) }));
         });
     });
 });

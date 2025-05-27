@@ -7,16 +7,16 @@ exports.seedCourses = void 0;
 const Course_1 = __importDefault(require("../models/Course"));
 const defaultCourses = [
     {
-        name: 'Mathematics 101',
-        description: 'Introduction to basic mathematics concepts including algebra and calculus.'
+        name: 'Matematik 101',
+        description: 'Temel matematik dersi.'
     },
     {
-        name: 'Physics 101',
-        description: 'Fundamental physics principles and mechanics.'
+        name: 'Fizik 101',
+        description: 'Fizik bilimine giriş dersi.'
     },
     {
-        name: 'Computer Science 101',
-        description: 'Introduction to programming and computer science basics.'
+        name: 'Bilgisayar Bilimleri',
+        description: 'Bilgisayar bilimi temelleri dersi.'
     }
 ];
 const seedCourses = async () => {
