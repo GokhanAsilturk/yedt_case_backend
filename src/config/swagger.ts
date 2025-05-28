@@ -26,16 +26,14 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ['./src/routes/*.ts', './src/controllers/*.ts', './src/utils/*.ts'], // Path to the API routes, controllers and utils
+  apis: ['./src/routes/*.ts', './src/controllers/*.ts', './src/utils/*.ts'],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
 export const setupSwagger = (app: Express): void => {
-  // Swagger UI endpoint
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-  // Swagger JSON endpoint
   app.get('/swagger.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);

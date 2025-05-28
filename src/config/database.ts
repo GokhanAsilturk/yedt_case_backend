@@ -1,18 +1,15 @@
 import { Sequelize } from 'sequelize';
 
-// Ortama göre veritabanı yapılandırması belirle
 const env = process.env.NODE_ENV ?? 'development';
 
-// Test ortamı için ayrı veritabanı yapılandırması
 const createTestConnection = () => {
   return new Sequelize({
     dialect: 'sqlite',
-    storage: ':memory:', // In-memory SQLite veritabanı
+    storage: ':memory:',
     logging: false,
   });
 };
 
-// Geliştirme ve üretim ortamı için PostgreSQL yapılandırması
 const createNormalConnection = () => {
   return new Sequelize({
     dialect: 'postgres',
@@ -25,7 +22,6 @@ const createNormalConnection = () => {
   });
 };
 
-// Ortama göre uygun bağlantıyı seç
 export const sequelize = env === 'test'
   ? createTestConnection()
   : createNormalConnection();

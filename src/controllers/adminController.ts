@@ -23,7 +23,8 @@ const AdminController = {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
       const search = req.query.search ?? '';
-      const offset = (page - 1) * limit;      const whereClause = search ? {
+      const offset = (page - 1) * limit;
+      const whereClause = search ? {
         [Op.or]: [
           { '$user.username$': { [Op.iLike]: `%${search}%` } },
           { '$user.email$': { [Op.iLike]: `%${search}%` } },
@@ -35,7 +36,8 @@ const AdminController = {
       } : {};
 
       const { count, rows: admins } = await Admin.findAndCountAll({
-        where: whereClause,        include: [
+        where: whereClause,
+        include: [
           {
             model: User,
             as: 'user',
@@ -61,7 +63,8 @@ const AdminController = {
 
   // Get admin details by ID
   getAdminById: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => {
-    try {      const admin = await Admin.findByPk(req.params.id, {
+    try {
+      const admin = await Admin.findByPk(req.params.id, {
         include: [
           {
             model: User,
@@ -90,7 +93,7 @@ const AdminController = {
   // Create a new admin
   createAdmin: async (req: TypedRequest<{}, any, AdminCreateBody>, res: Response, next?: NextFunction): Promise<void> => {
     try {
-      const { username, email, password, firstName, lastName, department, title } = req.body;      // Create User first
+      const { username, email, password, firstName, lastName, department, title } = req.body;
       const user = await User.create({
         username,
         email,
@@ -98,14 +101,13 @@ const AdminController = {
         role: 'admin',
         firstName,
         lastName
-      } as any); // Type assertion needed due to Sequelize typing limitations
+      } as any);
 
-      // Then create Admin
       const admin = await Admin.create({
         userId: user.id,
         department,
         title
-      } as any); // Type assertion needed due to Sequelize typing limitations
+      } as any);
 
       ApiResponse.success(res, { user, admin }, 'Yönetici başarıyla oluşturuldu', 201);
     } catch (error) {
@@ -128,14 +130,12 @@ const AdminController = {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
-      // Önce kullanıcı bilgilerini güncelle
       const user = await User.findByPk(admin.userId);
       await user?.update({
         firstName,
         lastName
       });
 
-      // Sonra admin bilgilerini güncelle
       await admin.update({
         department,
         title
@@ -162,12 +162,9 @@ const AdminController = {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
-      // Transaction kullanarak silme işlemlerini gerçekleştir
       await sequelize.transaction(async (t: Transaction) => {
-        // Önce admin'i sil
         await admin.destroy({ transaction: t });
 
-        // Sonra user'ı sil
         await User.destroy({
           where: { id: admin.userId },
           transaction: t

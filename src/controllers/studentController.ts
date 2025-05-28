@@ -44,9 +44,9 @@ const StudentController = {
         next(err);
       } else if (err instanceof AppError) {
         ApiResponse.error(res, err.message, err.statusCode, { code: err.errorCode });
-      } else if (err instanceof Error) { // Değişiklik: err'in Error tipinde olup olmadığı kontrol ediliyor
+      } else if (err instanceof Error) { 
         ApiResponse.error(res, err.message, 500);
-      } else { // Değişiklik: Bilinmeyen hatalar için genel mesaj
+      } else { 
         ApiResponse.error(res, ErrorMessage.GENERIC_ERROR.tr, 500);
       }
     }
@@ -182,7 +182,6 @@ const StudentController = {
         );
       }
 
-      // Student tablosunu güncelle
       if (birthDate) {
         await student.update({
           birthDate: new Date(birthDate)
@@ -204,19 +203,16 @@ const StudentController = {
         next(error);
       } else if (error instanceof AppError) {
           ApiResponse.error(res, error.message, error.statusCode, { code: error.errorCode });
-        } else {
-          // Sequelize hata mesajlarını daha anlaşılır hale getir
-          if (error instanceof Error && (error.message.includes('Duplicate entry') || error.message.includes('tekil kısıtlaması') || error.message.includes('unique constraint'))) {
-            if (error.message.toLowerCase().includes('username') || error.message.toLowerCase().includes('users_username')) {
-              ApiResponse.error(res, ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, { code: ErrorCode.USERNAME_ALREADY_EXISTS });
-            } else if (error.message.toLowerCase().includes('email') || error.message.toLowerCase().includes('users_email')) {
-              ApiResponse.error(res, ErrorMessage.EMAIL_ALREADY_EXISTS.tr, 409, { code: ErrorCode.EMAIL_ALREADY_EXISTS });
-            } else {
-              ApiResponse.error(res, ErrorMessage.CONFLICT.tr, 409, { code: ErrorCode.CONFLICT });
-            }
+        } else if (error instanceof Error && (error.message.includes('Duplicate entry') || error.message.includes('tekil kısıtlaması') || error.message.includes('unique constraint'))) {
+          if (error.message.toLowerCase().includes('username') || error.message.toLowerCase().includes('users_username')) {
+            ApiResponse.error(res, ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, { code: ErrorCode.USERNAME_ALREADY_EXISTS });
+          } else if (error.message.toLowerCase().includes('email') || error.message.toLowerCase().includes('users_email')) {
+            ApiResponse.error(res, ErrorMessage.EMAIL_ALREADY_EXISTS.tr, 409, { code: ErrorCode.EMAIL_ALREADY_EXISTS });
           } else {
-            ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500, { code: ErrorCode.INTERNAL_SERVER_ERROR });
+            ApiResponse.error(res, ErrorMessage.CONFLICT.tr, 409, { code: ErrorCode.CONFLICT });
           }
+        } else {
+          ApiResponse.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500, { code: ErrorCode.INTERNAL_SERVER_ERROR });
         }
     }
   },

@@ -31,9 +31,6 @@ interface LogoutRequest extends Request {
 }
 
 class AuthController {
-  /**
-   * Refresh token kullanarak yeni bir access token oluşturur
-   */
   static async refreshToken(req: RefreshTokenRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
       const { refreshToken } = req.body;
@@ -62,24 +59,18 @@ class AuthController {
     }
   }
   
-  /**
-   * Kullanıcı çıkışını yapar ve tokenları geçersiz kılar
-   */
   static async logout(req: LogoutRequest, res: Response, next?: NextFunction): Promise<void> {
     try {
-      // Access token'ı geçersiz kıl (eğer varsa)
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
       if (accessToken) {
         invalidateToken(accessToken);
       }
       
-      // Refresh token'ı geçersiz kıl (eğer varsa)
       const { refreshToken } = req.body;
       if (refreshToken) {
         invalidateToken(refreshToken);
       }
       
-      // Kullanıcının token sürümünü artır (varsa)
       if (req.user?.id) {
         await User.update(
           { tokenVersion: User.sequelize!.literal('tokenVersion + 1') },
@@ -153,7 +144,7 @@ class AuthController {
 
       if (!isValidPassword) {
         throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
-      }      // Öğrenci kaydını bul
+      }
       const student = await Student.findOne({ where: { userId: user.id } });
       
       if (!student) {
@@ -176,7 +167,6 @@ class AuthController {
         refreshToken
       };
 
-      // ApiResponse kullanarak yanıtı gönderelim
       ApiResponse.success(res, responseData);
     } catch (error) {
       if (next) {
