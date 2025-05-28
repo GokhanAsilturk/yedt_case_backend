@@ -12,35 +12,27 @@ const validatePassword = (password) => {
     return passwordRegex.test(password);
 };
 exports.validatePassword = validatePassword;
-/**
- * Joi validasyon şemalarını kullanarak request validation gerçekleştiren middleware
- * @param schema Doğrulama için kullanılacak Joi şema nesnesi
- */
 const validate = (schema) => {
     return (req, res, next) => {
         const validationErrors = [];
-        // Request body doğrulama
         if (schema.body) {
             const { error } = joi_1.default.object(schema.body).validate(req.body, { abortEarly: false });
             if (error) {
                 validationErrors.push(...error.details.map(detail => detail.message));
             }
         }
-        // Request query doğrulama
         if (schema.query) {
             const { error } = joi_1.default.object(schema.query).validate(req.query, { abortEarly: false });
             if (error) {
                 validationErrors.push(...error.details.map(detail => detail.message));
             }
         }
-        // Request params doğrulama
         if (schema.params) {
             const { error } = joi_1.default.object(schema.params).validate(req.params, { abortEarly: false });
             if (error) {
                 validationErrors.push(...error.details.map(detail => detail.message));
             }
         }
-        // Hata varsa, hata yanıtı döndür
         if (validationErrors.length > 0) {
             throw new AppError_1.AppError(`Doğrulama hatası: ${validationErrors.join(', ')}`, 400, errorCodes_1.ErrorCode.VALIDATION_ERROR);
         }
@@ -48,7 +40,6 @@ const validate = (schema) => {
     };
 };
 exports.validate = validate;
-// Ortak kullanılacak Joi şemaları
 exports.commonSchemas = {
     id: joi_1.default.string().uuid().required().messages({
         'string.guid': 'Geçersiz ID formatı. UUID olmalıdır.',

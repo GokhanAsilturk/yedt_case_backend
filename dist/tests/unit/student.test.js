@@ -10,7 +10,6 @@ const User_1 = __importDefault(require("../../models/User"));
 const Enrollment_1 = __importDefault(require("../../models/Enrollment"));
 const apiResponse_1 = __importDefault(require("../../utils/apiResponse"));
 const database_1 = require("../../config/database");
-// Mock models
 jest.mock('../../models/Student');
 jest.mock('../../models/User');
 jest.mock('../../models/Enrollment');
@@ -19,7 +18,6 @@ jest.mock('../../config/database', () => ({
         transaction: jest.fn().mockImplementation(callback => callback())
     }
 }));
-// Mock ApiResponse
 jest.mock('../../utils/apiResponse', () => ({
     success: jest.fn(),
     error: jest.fn(),
@@ -32,15 +30,13 @@ describe('StudentController', () => {
             json: jest.fn(),
             status: jest.fn().mockReturnThis(),
         };
-        // Reset all mocks after each test
         jest.clearAllMocks();
     });
     describe('getAllStudents', () => {
         it('should return paginated students', async () => {
-            // Mock data
             const mockStudents = [
-                { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } },
-                { id: 2, firstName: 'Jane', lastName: 'Smith', userAccount: { username: 'janesmith', email: 'jane@example.com' } }
+                { id: 1, user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' } },
+                { id: 2, user: { firstName: 'Jane', lastName: 'Smith', username: 'janesmith', email: 'jane@example.com' } }
             ];
             const mockResult = {
                 count: 2,
@@ -59,8 +55,8 @@ describe('StudentController', () => {
                 include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount',
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ],
                 limit: 10,
@@ -70,9 +66,8 @@ describe('StudentController', () => {
             expect(apiResponse_1.default.pagination).toHaveBeenCalledWith(mockResponse, mockStudents, 1, 10, 2);
         });
         it('should apply search filters correctly', async () => {
-            // Mock data
             const mockStudents = [
-                { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } }
+                { id: 1, user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' } }
             ];
             const mockResult = {
                 count: 1,
@@ -92,15 +87,14 @@ describe('StudentController', () => {
                     [sequelize_1.Op.or]: [
                         { '$user.username$': { [sequelize_1.Op.iLike]: '%john%' } },
                         { '$user.email$': { [sequelize_1.Op.iLike]: '%john%' } },
-                        { firstName: { [sequelize_1.Op.iLike]: '%john%' } },
-                        { lastName: { [sequelize_1.Op.iLike]: '%john%' } }
+                        { '$user.firstName$': { [sequelize_1.Op.iLike]: '%john%' } },
+                        { '$user.lastName$': { [sequelize_1.Op.iLike]: '%john%' } }
                     ]
                 }
             }));
             expect(apiResponse_1.default.pagination).toHaveBeenCalled();
         });
         it('should handle errors', async () => {
-            // Mock error
             const error = new Error('Database error');
             Student_1.default.findAndCountAll.mockRejectedValue(error);
             const mockRequest = {
@@ -115,12 +109,9 @@ describe('StudentController', () => {
     });
     describe('getStudentById', () => {
         it('should return student by id', async () => {
-            // Mock student
             const mockStudent = {
                 id: 1,
-                firstName: 'John',
-                lastName: 'Doe',
-                userAccount: { username: 'johndoe', email: 'john@example.com' }
+                user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' }
             };
             Student_1.default.findByPk.mockResolvedValue(mockStudent);
             const mockRequest = {
@@ -133,8 +124,8 @@ describe('StudentController', () => {
                 include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount',
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ]
             });
@@ -164,9 +155,8 @@ describe('StudentController', () => {
     });
     describe('createStudent', () => {
         it('should create student successfully', async () => {
-            // Mock user and student
-            const mockUser = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'student' };
-            const mockStudent = { id: 1, userId: 1, firstName: 'John', lastName: 'Doe' };
+            const mockUser = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'student', firstName: 'John', lastName: 'Doe' };
+            const mockStudent = { id: 1, userId: 1, birthDate: '1990-01-01' };
             User_1.default.create.mockResolvedValue(mockUser);
             Student_1.default.create.mockResolvedValue(mockStudent);
             const mockRequest = {
@@ -184,12 +174,12 @@ describe('StudentController', () => {
                 username: 'johndoe',
                 email: 'john@example.com',
                 password: 'password123',
-                role: 'student'
+                role: 'student',
+                firstName: 'John',
+                lastName: 'Doe'
             });
             expect(Student_1.default.create).toHaveBeenCalledWith({
                 userId: 1,
-                firstName: 'John',
-                lastName: 'Doe',
                 birthDate: expect.any(Date)
             });
             expect(apiResponse_1.default.success).toHaveBeenCalledWith(mockResponse, { user: mockUser, student: mockStudent }, 'Student created successfully', 201);
@@ -213,31 +203,38 @@ describe('StudentController', () => {
     });
     describe('updateStudent', () => {
         it('should update student successfully', async () => {
-            // Mock student
             const mockStudent = {
                 id: 1,
-                firstName: 'John',
-                lastName: 'Doe',
+                userId: 1,
+                update: jest.fn().mockResolvedValue({ id: 1, birthDate: '1990-01-01' })
+            };
+            const mockUser = {
+                id: 1,
                 update: jest.fn().mockResolvedValue({ id: 1, firstName: 'Updated', lastName: 'Student' })
             };
             Student_1.default.findByPk.mockResolvedValue(mockStudent);
+            User_1.default.findByPk.mockResolvedValue(mockUser);
             const mockRequest = {
                 params: {
                     id: '1'
                 },
                 body: {
                     firstName: 'Updated',
-                    lastName: 'Student'
+                    lastName: 'Student',
+                    birthDate: '1990-01-01'
                 }
             };
             await studentController_1.default.updateStudent(mockRequest, mockResponse);
             expect(Student_1.default.findByPk).toHaveBeenCalledWith('1');
-            expect(mockStudent.update).toHaveBeenCalledWith({
+            expect(User_1.default.findByPk).toHaveBeenCalledWith(1);
+            expect(mockUser.update).toHaveBeenCalledWith({
                 firstName: 'Updated',
-                lastName: 'Student',
-                birthDate: undefined
+                lastName: 'Student'
             });
-            expect(apiResponse_1.default.success).toHaveBeenCalledWith(mockResponse, mockStudent, 'Student updated successfully');
+            expect(mockStudent.update).toHaveBeenCalledWith({
+                birthDate: expect.any(Date)
+            });
+            expect(apiResponse_1.default.success).toHaveBeenCalledWith(mockResponse, { student: mockStudent, user: mockUser }, 'Student updated successfully');
         });
         it('should return 404 when student not found', async () => {
             Student_1.default.findByPk.mockResolvedValue(null);
@@ -271,7 +268,6 @@ describe('StudentController', () => {
     });
     describe('deleteStudent', () => {
         it('should delete student successfully', async () => {
-            // Mock student
             const mockStudent = {
                 id: 1,
                 userId: 1,

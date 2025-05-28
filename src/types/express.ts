@@ -46,6 +46,7 @@ export interface StudentCreateBody {
 }
 
 export interface StudentUpdateBody {
+  username?: string;
   firstName?: string;
   lastName?: string;
   birthDate?: string;

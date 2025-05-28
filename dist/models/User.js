@@ -49,10 +49,17 @@ User.init({
         type: sequelize_1.DataTypes.UUID,
         defaultValue: sequelize_1.DataTypes.UUIDV4,
         primaryKey: true
-    },
-    username: {
+    }, username: {
         type: sequelize_1.DataTypes.STRING,
         unique: true,
+        allowNull: false
+    },
+    firstName: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
+    lastName: {
+        type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
     email: {
@@ -94,28 +101,20 @@ User.init({
     modelName: 'User',
     tableName: 'Users'
 });
-// Şifre değişikliğinde güncellemek için hook
 User.beforeUpdate(async (user) => {
     if (user.changed('password')) {
-        user.password = await bcrypt.hash(user.password, 12); // Salt faktörünü artır (10'dan 12'ye)
-        user.tokenVersion = (user.tokenVersion || 0) + 1; // Şifre değiştiğinde token sürümünü artır
+        user.password = await bcrypt.hash(user.password, 12);
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
     }
 });
-// Yeni kullanıcı oluşturulduğunda şifreyi hashlemek için hook
 User.beforeCreate(async (user) => {
     if (!(0, validator_1.validatePassword)(user.password)) {
         throw new AppError_1.AppError('Şifre en az 8 karakter uzunluğunda olmalı, en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.', 400, errorCodes_1.ErrorCode.VALIDATION_ERROR);
     }
-    // Daha güçlü hashing (salt faktörünü artır)
     user.password = await bcrypt.hash(user.password, 12);
 });
-// Şifre doğrulama işlevini genişlet (brute force saldırılarına karşı zamanlama koruması)
 User.prototype.validatePassword = async function (password) {
-    // Zamanlama saldırılarına karşı koruma için sabit zamanlı karşılaştırma
     const isValid = await bcrypt.compare(password, this.password);
-    // Başarısız giriş denemelerini yönetmek için eklenebilir - veritabanında field eklenmesi gerekebilir
-    // this.loginAttempts = isValid ? 0 : (this.loginAttempts || 0) + 1;
-    // await this.save();
     return isValid;
 };
 exports.default = User;

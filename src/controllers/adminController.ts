@@ -23,26 +23,23 @@ const AdminController = {
       const page = parseInt(req.query.page ?? '1');
       const limit = parseInt(req.query.limit ?? '10');
       const search = req.query.search ?? '';
-      const offset = (page - 1) * limit;
-
-      const whereClause = search ? {
+      const offset = (page - 1) * limit;      const whereClause = search ? {
         [Op.or]: [
           { '$user.username$': { [Op.iLike]: `%${search}%` } },
           { '$user.email$': { [Op.iLike]: `%${search}%` } },
-          { firstName: { [Op.iLike]: `%${search}%` } },
-          { lastName: { [Op.iLike]: `%${search}%` } },
+          { '$user.firstName$': { [Op.iLike]: `%${search}%` } },
+          { '$user.lastName$': { [Op.iLike]: `%${search}%` } },
           { department: { [Op.iLike]: `%${search}%` } },
           { title: { [Op.iLike]: `%${search}%` } }
         ]
       } : {};
 
       const { count, rows: admins } = await Admin.findAndCountAll({
-        where: whereClause,
-        include: [
+        where: whereClause,        include: [
           {
             model: User,
-            as: 'userAccount',
-            attributes: ['username', 'email', 'role']
+            as: 'user',
+            attributes: ['username', 'email', 'role', 'firstName', 'lastName']
           }
         ],
         limit,
@@ -64,13 +61,12 @@ const AdminController = {
 
   // Get admin details by ID
   getAdminById: async (req: TypedRequest<IdParams>, res: Response, next?: NextFunction): Promise<void> => {
-    try {
-      const admin = await Admin.findByPk(req.params.id, {
+    try {      const admin = await Admin.findByPk(req.params.id, {
         include: [
           {
             model: User,
-            as: 'userAccount',
-            attributes: ['username', 'email', 'role']
+            as: 'user',
+            attributes: ['username', 'email', 'role', 'firstName', 'lastName']
           }
         ]
       });
@@ -94,21 +90,19 @@ const AdminController = {
   // Create a new admin
   createAdmin: async (req: TypedRequest<{}, any, AdminCreateBody>, res: Response, next?: NextFunction): Promise<void> => {
     try {
-      const { username, email, password, firstName, lastName, department, title } = req.body;
-
-      // Create User first
+      const { username, email, password, firstName, lastName, department, title } = req.body;      // Create User first
       const user = await User.create({
         username,
         email,
         password,
-        role: 'admin'
+        role: 'admin',
+        firstName,
+        lastName
       } as any); // Type assertion needed due to Sequelize typing limitations
 
       // Then create Admin
       const admin = await Admin.create({
         userId: user.id,
-        firstName,
-        lastName,
         department,
         title
       } as any); // Type assertion needed due to Sequelize typing limitations
@@ -124,7 +118,6 @@ const AdminController = {
         }
     }
   },
-
   // Update admin details
   updateAdmin: async (req: TypedRequest<IdParams, any, AdminUpdateBody>, res: Response, next?: NextFunction): Promise<void> => {
     try {
@@ -135,14 +128,20 @@ const AdminController = {
         throw new AppError(ErrorMessage.NOT_FOUND.tr, 404, ErrorCode.NOT_FOUND);
       }
 
-      await admin.update({
+      // Önce kullanıcı bilgilerini güncelle
+      const user = await User.findByPk(admin.userId);
+      await user?.update({
         firstName,
-        lastName,
+        lastName
+      });
+
+      // Sonra admin bilgilerini güncelle
+      await admin.update({
         department,
         title
       });
 
-      ApiResponse.success(res, admin, 'Yönetici başarıyla güncellendi');
+      ApiResponse.success(res, { admin, user }, 'Yönetici başarıyla güncellendi');
     } catch (error) {
       if (next) {
         next(error);

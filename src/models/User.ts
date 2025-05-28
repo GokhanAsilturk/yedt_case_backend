@@ -8,6 +8,8 @@ import { sequelize } from '../config/database';
 class User extends Model {
   declare id: CreationOptional<string>;
   declare username: string;
+  declare firstName: string;
+  declare lastName: string;
   declare email: string;
   declare password: string;
   declare role: 'admin' | 'student';
@@ -25,10 +27,17 @@ User.init({
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
-  },
-  username: {
+  },  username: {
     type: DataTypes.STRING,
     unique: true,
+    allowNull: false
+  },
+  firstName: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  lastName: {
+    type: DataTypes.STRING,
     allowNull: false
   },
   email: {

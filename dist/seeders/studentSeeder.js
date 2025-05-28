@@ -7,10 +7,11 @@ exports.seedStudents = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const Student_1 = __importDefault(require("../models/Student"));
 const seedStudents = async () => {
-    try {
-        // Örnek öğrenci kullanıcısı oluştur
+    try { // Örnek öğrenci kullanıcısı oluştur
         const studentUser = await User_1.default.create({
             username: 'gokhanasilturk',
+            firstName: 'Gokhan',
+            lastName: 'Asilturk',
             email: 'gokhanasilturkk@gmail.com',
             password: 'Student123!',
             role: 'student'
@@ -18,8 +19,6 @@ const seedStudents = async () => {
         // Öğrenci bilgilerini oluştur
         await Student_1.default.create({
             userId: studentUser.id,
-            firstName: 'Gokhan',
-            lastName: 'Asilturk',
             birthDate: new Date('2000-01-01')
         });
     }

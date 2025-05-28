@@ -42,12 +42,14 @@ const seedAdmins = async () => {
     const id = (0, uuid_1.v4)();
     try {
         await database_1.sequelize.query(`
-      INSERT INTO "Users" (id, username, email, password, role, "createdAt", "updatedAt")
-      VALUES (:id, :username, :email, :password, :role, NOW(), NOW())
+      INSERT INTO "Users" (id, username, "firstName", "lastName", email, password, role, "createdAt", "updatedAt")
+      VALUES (:id, :username, :firstName, :lastName, :email, :password, :role, NOW(), NOW())
     `, {
             replacements: {
                 id,
                 username: 'admin',
+                firstName: 'Admin',
+                lastName: 'User',
                 email: 'admin@example.com',
                 password: hashedPassword,
                 role: 'admin'

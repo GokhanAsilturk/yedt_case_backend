@@ -10,22 +10,13 @@ const Student = sequelize.define<StudentModel>(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true
-    },
-    userId: {
+    },    userId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'Users',
         key: 'id'
       }
-    },
-    firstName: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    lastName: {
-      type: DataTypes.STRING,
-      allowNull: false
     },
     birthDate: {
       type: DataTypes.DATE,

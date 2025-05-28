@@ -13,7 +13,6 @@ const AppError_1 = require("../error/models/AppError");
 const errorCodes_1 = require("../error/constants/errorCodes");
 const errorMessages_1 = require("../error/constants/errorMessages");
 const StudentController = {
-    // List all students (with pagination and search)
     getAllStudents: async (req, res, next) => {
         var _a, _b, _c;
         try {
@@ -25,17 +24,16 @@ const StudentController = {
                 [sequelize_1.Op.or]: [
                     { '$user.username$': { [sequelize_1.Op.iLike]: `%${search}%` } },
                     { '$user.email$': { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { firstName: { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { lastName: { [sequelize_1.Op.iLike]: `%${search}%` } }
+                    { '$user.firstName$': { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$user.lastName$': { [sequelize_1.Op.iLike]: `%${search}%` } }
                 ]
             } : {};
             const { count, rows: students } = await Student_1.default.findAndCountAll({
-                where: whereClause,
-                include: [
+                where: whereClause, include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount', // Updated alias to match model association
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ],
                 limit,
@@ -56,7 +54,6 @@ const StudentController = {
             }
         }
     },
-    // Get student details by ID
     getStudentById: async (req, res, next) => {
         var _a, _b;
         try {
@@ -64,15 +61,14 @@ const StudentController = {
                 include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount', // Updated alias to match model association
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ]
             });
             if (!student) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            // Öğrencinin kendi ID'si kontrolü
             if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'student' && student.id !== ((_b = req.user.studentId) !== null && _b !== void 0 ? _b : req.user.id)) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.UNAUTHORIZED.tr, 403, errorCodes_1.ErrorCode.FORBIDDEN);
             }
@@ -90,24 +86,22 @@ const StudentController = {
             }
         }
     },
-    // Create a new student
     createStudent: async (req, res, next) => {
         try {
             const { username, email, password, firstName, lastName, birthDate } = req.body;
-            // Create User first
             const user = await User_1.default.create({
                 username,
+                firstName,
+                lastName,
                 email,
                 password,
                 role: 'student'
-            }); // Type assertion needed due to Sequelize typing limitations
-            // Then create Student
+            });
             const student = await Student_1.default.create({
                 userId: user.id,
-                firstName,
-                lastName,
-                birthDate: new Date(birthDate)
-            }); // Type assertion needed due to Sequelize typing limitations
+                birthDate: new Date(birthDate),
+                birthday: birthDate
+            });
             apiResponse_1.default.success(res, { user, student }, 'Student created successfully', 201);
         }
         catch (error) {
@@ -121,21 +115,46 @@ const StudentController = {
                 apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci oluşturulurken bir hata oluştu', 500);
             }
         }
-    },
-    // Update student details
-    updateStudent: async (req, res, next) => {
+    }, updateStudent: async (req, res, next) => {
         try {
-            const { firstName, lastName, birthDate } = req.body;
-            const student = await Student_1.default.findByPk(req.params.id);
+            const { firstName, lastName, username, birthDate, birthday } = req.body;
+            const student = await Student_1.default.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: User_1.default,
+                        as: 'user',
+                        attributes: ['id']
+                    }
+                ]
+            });
             if (!student) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            await student.update({
-                firstName,
-                lastName,
-                birthDate: birthDate ? new Date(birthDate) : undefined // Handle optional birthDate
+            // User tablosunu güncelle
+            if (firstName || lastName || username) {
+                await User_1.default.update({
+                    ...(firstName && { firstName }),
+                    ...(lastName && { lastName }),
+                    ...(username && { username: username })
+                }, { where: { id: student.userId } });
+            } // Student tablosunu güncelle
+            if (birthDate || birthday) {
+                await student.update({
+                    ...(birthDate && { birthDate: new Date(birthDate) }),
+                    ...(birthday && { birthday })
+                });
+            }
+            // Güncellenmiş student'ı include ile geri döndür
+            const updatedStudent = await Student_1.default.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: User_1.default,
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
+                    }
+                ]
             });
-            apiResponse_1.default.success(res, student, 'Student updated successfully');
+            apiResponse_1.default.success(res, updatedStudent, 'Student updated successfully');
         }
         catch (error) {
             if (next) {
@@ -149,23 +168,18 @@ const StudentController = {
             }
         }
     },
-    // Delete a student
     deleteStudent: async (req, res, next) => {
         try {
             const student = await Student_1.default.findByPk(req.params.id);
             if (!student) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            // Transaction kullanarak silme işlemlerini gerçekleştir
             await database_1.sequelize.transaction(async (t) => {
-                // Önce enrollment kayıtlarını sil
                 await Enrollment_1.default.destroy({
                     where: { studentId: student.id },
                     transaction: t
                 });
-                // Sonra öğrenciyi sil
                 await student.destroy({ transaction: t });
-                // En son user'ı sil
                 await User_1.default.destroy({
                     where: { id: student.userId },
                     transaction: t
@@ -185,22 +199,42 @@ const StudentController = {
             }
         }
     },
-    // Update student profile
     updateStudentProfile: async (req, res, next) => {
-        var _a, _b, _c;
+        var _a;
         try {
-            const { firstName, lastName, birthDate } = req.body;
-            const studentId = (_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.studentId) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.id; // Assuming studentId is available in req.user
-            const student = await Student_1.default.findByPk(studentId);
-            if (!student) {
-                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
+            const { firstName, lastName, birthDate, birthday } = req.body;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            // User bilgilerini güncelle
+            if (firstName || lastName) {
+                await User_1.default.update({
+                    ...(firstName && { firstName }),
+                    ...(lastName && { lastName })
+                }, { where: { id: userId } });
             }
-            await student.update({
-                firstName,
-                lastName,
-                birthDate: birthDate ? new Date(birthDate) : undefined,
+            // Student bilgilerini güncelle
+            if (birthDate) {
+                const student = await Student_1.default.findOne({ where: { userId } });
+                if (student) {
+                    await student.update({
+                        birthDate: new Date(birthDate)
+                    });
+                }
+            }
+            // Güncellenmiş bilgileri getir
+            const updatedUser = await User_1.default.findByPk(userId, {
+                attributes: ['id', 'username', 'email', 'firstName', 'lastName', 'role']
             });
-            apiResponse_1.default.success(res, student, 'Profil başarıyla güncellendi');
+            const updatedStudent = await Student_1.default.findOne({
+                where: { userId },
+                include: [
+                    {
+                        model: User_1.default,
+                        as: 'user',
+                        attributes: ['username', 'email', 'firstName', 'lastName', 'role']
+                    }
+                ]
+            });
+            apiResponse_1.default.success(res, { user: updatedUser, student: updatedStudent }, 'Profil başarıyla güncellendi');
         }
         catch (error) {
             if (next) {

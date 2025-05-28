@@ -16,7 +16,6 @@ const Enrollment_1 = __importDefault(require("./Enrollment"));
 exports.Enrollment = Enrollment_1.default;
 const database_1 = require("../config/database");
 Object.defineProperty(exports, "sequelize", { enumerable: true, get: function () { return database_1.sequelize; } });
-// User - Student İlişkisi (One-to-One)
 User_1.default.hasOne(Student_1.default, {
     foreignKey: 'userId',
     as: 'studentProfile'
@@ -25,7 +24,6 @@ Student_1.default.belongsTo(User_1.default, {
     foreignKey: 'userId',
     as: 'userAccount'
 });
-// User - Admin İlişkisi (One-to-One)
 User_1.default.hasOne(Admin_1.default, {
     foreignKey: 'userId',
     as: 'adminProfile'
@@ -34,7 +32,6 @@ Admin_1.default.belongsTo(User_1.default, {
     foreignKey: 'userId',
     as: 'userAccount'
 });
-// Student - Course İlişkisi (Many-to-Many through Enrollment)
 Student_1.default.belongsToMany(Course_1.default, {
     through: Enrollment_1.default,
     foreignKey: 'studentId',
@@ -47,7 +44,6 @@ Course_1.default.belongsToMany(Student_1.default, {
     otherKey: 'studentId',
     as: 'enrolledStudents'
 });
-// Student - Enrollment İlişkisi
 Student_1.default.hasMany(Enrollment_1.default, {
     foreignKey: 'studentId',
     as: 'studentEnrollments'
@@ -56,7 +52,6 @@ Enrollment_1.default.belongsTo(Student_1.default, {
     foreignKey: 'studentId',
     as: 'enrolledStudent'
 });
-// Course - Enrollment İlişkisi
 Course_1.default.hasMany(Enrollment_1.default, {
     foreignKey: 'courseId',
     as: 'courseEnrollments'

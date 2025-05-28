@@ -11,22 +11,13 @@ const Student = database_1.sequelize.define('Student', {
         type: sequelize_1.DataTypes.UUID,
         defaultValue: sequelize_1.DataTypes.UUIDV4,
         primaryKey: true
-    },
-    userId: {
+    }, userId: {
         type: sequelize_1.DataTypes.UUID,
         allowNull: false,
         references: {
             model: 'Users',
             key: 'id'
         }
-    },
-    firstName: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false
-    },
-    lastName: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false
     },
     birthDate: {
         type: sequelize_1.DataTypes.DATE,
@@ -47,7 +38,6 @@ const Student = database_1.sequelize.define('Student', {
     modelName: 'Student',
     timestamps: true
 });
-// Set up associations
 Student.belongsTo(User_1.default, { foreignKey: 'userId', as: 'user' });
 exports.default = Student;
 //# sourceMappingURL=Student.js.map

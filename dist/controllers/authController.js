@@ -37,7 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = __importDefault(require("../models/User"));
-const Student_1 = __importDefault(require("../models/Student")); // Student modelini ekledik
+const Student_1 = __importDefault(require("../models/Student"));
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const jwt_1 = require("../utils/jwt");
 const AppError_1 = require("../error/models/AppError");
@@ -120,6 +120,8 @@ class AuthController {
             const safeUser = {
                 userId: user.id,
                 username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 email: user.email,
                 role: user.role
             };
@@ -151,8 +153,7 @@ class AuthController {
             const isValidPassword = await user.validatePassword(password);
             if (!isValidPassword) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.INVALID_CREDENTIALS.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
-            }
-            // Öğrenci kaydını bul
+            } // Öğrenci kaydını bul
             const student = await Student_1.default.findOne({ where: { userId: user.id } });
             if (!student) {
                 throw new AppError_1.AppError('Öğrenci kaydı bulunamadı', 404, errorCodes_1.ErrorCode.NOT_FOUND);
@@ -162,8 +163,8 @@ class AuthController {
                 user: {
                     id: student.id,
                     userId: user.id,
-                    firstName: student.firstName,
-                    lastName: student.lastName,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
                     username: user.username,
                     email: user.email,
                     role: user.role

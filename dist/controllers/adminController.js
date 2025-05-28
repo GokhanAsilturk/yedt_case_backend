@@ -24,19 +24,18 @@ const AdminController = {
                 [sequelize_1.Op.or]: [
                     { '$user.username$': { [sequelize_1.Op.iLike]: `%${search}%` } },
                     { '$user.email$': { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { firstName: { [sequelize_1.Op.iLike]: `%${search}%` } },
-                    { lastName: { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$user.firstName$': { [sequelize_1.Op.iLike]: `%${search}%` } },
+                    { '$user.lastName$': { [sequelize_1.Op.iLike]: `%${search}%` } },
                     { department: { [sequelize_1.Op.iLike]: `%${search}%` } },
                     { title: { [sequelize_1.Op.iLike]: `%${search}%` } }
                 ]
             } : {};
             const { count, rows: admins } = await Admin_1.default.findAndCountAll({
-                where: whereClause,
-                include: [
+                where: whereClause, include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount',
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ],
                 limit,
@@ -64,8 +63,8 @@ const AdminController = {
                 include: [
                     {
                         model: User_1.default,
-                        as: 'userAccount',
-                        attributes: ['username', 'email', 'role']
+                        as: 'user',
+                        attributes: ['username', 'email', 'role', 'firstName', 'lastName']
                     }
                 ]
             });
@@ -89,19 +88,18 @@ const AdminController = {
     // Create a new admin
     createAdmin: async (req, res, next) => {
         try {
-            const { username, email, password, firstName, lastName, department, title } = req.body;
-            // Create User first
+            const { username, email, password, firstName, lastName, department, title } = req.body; // Create User first
             const user = await User_1.default.create({
                 username,
                 email,
                 password,
-                role: 'admin'
+                role: 'admin',
+                firstName,
+                lastName
             }); // Type assertion needed due to Sequelize typing limitations
             // Then create Admin
             const admin = await Admin_1.default.create({
                 userId: user.id,
-                firstName,
-                lastName,
                 department,
                 title
             }); // Type assertion needed due to Sequelize typing limitations
@@ -127,13 +125,18 @@ const AdminController = {
             if (!admin) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            await admin.update({
+            // Önce kullanıcı bilgilerini güncelle
+            const user = await User_1.default.findByPk(admin.userId);
+            await (user === null || user === void 0 ? void 0 : user.update({
                 firstName,
-                lastName,
+                lastName
+            }));
+            // Sonra admin bilgilerini güncelle
+            await admin.update({
                 department,
                 title
             });
-            apiResponse_1.default.success(res, admin, 'Yönetici başarıyla güncellendi');
+            apiResponse_1.default.success(res, { admin, user }, 'Yönetici başarıyla güncellendi');
         }
         catch (error) {
             if (next) {

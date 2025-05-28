@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const enrollmentController_1 = __importDefault(require("../controllers/enrollmentController"));
 const middleware_1 = require("../middleware");
-const asyncHandler_1 = __importDefault(require("../utils/asyncHandler")); // Import the new asyncHandler
+const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const router = express_1.default.Router();
 router.post('/student/courses/:courseId/enroll', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentController_1.default.enrollCourse));
 router.delete('/student/courses/:courseId/withdraw', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentController_1.default.withdrawCourse));

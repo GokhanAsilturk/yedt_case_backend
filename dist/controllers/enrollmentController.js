@@ -139,7 +139,6 @@ const EnrollmentController = {
             apiResponse_1.default.success(res, enrollments, 'Öğrenci kayıtları başarıyla alındı');
         }
         catch (error) {
-            console.error('Öğrenci kayıtları getirilirken hata oluştu:', error);
             if (next) {
                 next(error);
             }

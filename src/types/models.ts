@@ -4,6 +4,8 @@ import { Model, InferAttributes, InferCreationAttributes, CreationOptional } fro
 export interface IUser {
   id: string;
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'admin' | 'student';
@@ -15,8 +17,6 @@ export interface IUser {
 export interface IAdmin {
   id: string;
   userId: string;
-  firstName: string;
-  lastName: string;
   department: string;
   title: string;
   createdAt: Date;
@@ -26,8 +26,6 @@ export interface IAdmin {
 export interface IStudent {
   id: string;
   userId: string;
-  firstName: string;
-  lastName: string;
   birthDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +52,8 @@ export interface IEnrollment {
 export interface UserModel extends Model<InferAttributes<UserModel>, InferCreationAttributes<UserModel>> {
   id: CreationOptional<string>;
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'admin' | 'student';
@@ -66,22 +66,20 @@ export interface UserModel extends Model<InferAttributes<UserModel>, InferCreati
 export interface AdminModel extends Model<InferAttributes<AdminModel>, InferCreationAttributes<AdminModel>> {
   id: CreationOptional<string>;
   userId: string;
-  firstName: string;
-  lastName: string;
   department: string;
   title: string;
   createdAt: CreationOptional<Date>;
   updatedAt: CreationOptional<Date>;
+  user?: UserModel;
 }
 
 export interface StudentModel extends Model<InferAttributes<StudentModel>, InferCreationAttributes<StudentModel>> {
   id: CreationOptional<string>;
   userId: string;
-  firstName: string;
-  lastName: string;
   birthDate: Date;
   createdAt: CreationOptional<Date>;
   updatedAt: CreationOptional<Date>;
+  user?: UserModel;
 }
 
 export interface CourseModel extends Model<InferAttributes<CourseModel>, InferCreationAttributes<CourseModel>> {
@@ -104,6 +102,8 @@ export interface EnrollmentModel extends Model<InferAttributes<EnrollmentModel>,
 // Input types for creating new records
 export interface UserCreateInput {
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'admin' | 'student';
@@ -112,16 +112,12 @@ export interface UserCreateInput {
 
 export interface AdminCreateInput {
   userId: string;
-  firstName: string;
-  lastName: string;
   department: string;
   title: string;
 }
 
 export interface StudentCreateInput {
   userId: string;
-  firstName: string;
-  lastName: string;
   birthDate: Date;
 }
 

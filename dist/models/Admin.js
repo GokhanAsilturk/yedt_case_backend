@@ -11,22 +11,13 @@ const Admin = database_1.sequelize.define('Admin', {
         type: sequelize_1.DataTypes.UUID,
         defaultValue: sequelize_1.DataTypes.UUIDV4,
         primaryKey: true
-    },
-    userId: {
+    }, userId: {
         type: sequelize_1.DataTypes.UUID,
         allowNull: false,
         references: {
             model: 'Users',
             key: 'id'
         }
-    },
-    firstName: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false
-    },
-    lastName: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false
     },
     department: {
         type: sequelize_1.DataTypes.STRING,
@@ -51,7 +42,6 @@ const Admin = database_1.sequelize.define('Admin', {
     modelName: 'Admin',
     timestamps: true
 });
-// Set up associations
 Admin.belongsTo(User_1.default, { foreignKey: 'userId', as: 'user' });
 exports.default = Admin;
 //# sourceMappingURL=Admin.js.map

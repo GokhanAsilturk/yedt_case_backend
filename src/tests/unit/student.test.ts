@@ -34,11 +34,10 @@ describe('StudentController', () => {
     jest.clearAllMocks();
   });
 
-  describe('getAllStudents', () => {
-    it('should return paginated students', async () => {
+  describe('getAllStudents', () => {    it('should return paginated students', async () => {
       const mockStudents = [
-        { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } },
-        { id: 2, firstName: 'Jane', lastName: 'Smith', userAccount: { username: 'janesmith', email: 'jane@example.com' } }
+        { id: 1, user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' } },
+        { id: 2, user: { firstName: 'Jane', lastName: 'Smith', username: 'janesmith', email: 'jane@example.com' } }
       ];
       
       const mockResult = {
@@ -56,14 +55,13 @@ describe('StudentController', () => {
       };
       
       await StudentController.getAllStudents(mockRequest as any, mockResponse as Response);
-      
-      expect(Student.findAndCountAll).toHaveBeenCalledWith({
+        expect(Student.findAndCountAll).toHaveBeenCalledWith({
         where: {},
         include: [
           {
             model: User,
-            as: 'userAccount',
-            attributes: ['username', 'email', 'role']
+            as: 'user',
+            attributes: ['username', 'email', 'role', 'firstName', 'lastName']
           }
         ],
         limit: 10,
@@ -79,10 +77,9 @@ describe('StudentController', () => {
         2
       );
     });
-    
-    it('should apply search filters correctly', async () => {
+      it('should apply search filters correctly', async () => {
       const mockStudents = [
-        { id: 1, firstName: 'John', lastName: 'Doe', userAccount: { username: 'johndoe', email: 'john@example.com' } }
+        { id: 1, user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' } }
       ];
       
       const mockResult = {
@@ -101,14 +98,13 @@ describe('StudentController', () => {
       };
       
       await StudentController.getAllStudents(mockRequest as any, mockResponse as Response);
-      
-      expect(Student.findAndCountAll).toHaveBeenCalledWith(expect.objectContaining({
+        expect(Student.findAndCountAll).toHaveBeenCalledWith(expect.objectContaining({
         where: {
           [Op.or]: [
             { '$user.username$': { [Op.iLike]: '%john%' } },
             { '$user.email$': { [Op.iLike]: '%john%' } },
-            { firstName: { [Op.iLike]: '%john%' } },
-            { lastName: { [Op.iLike]: '%john%' } }
+            { '$user.firstName$': { [Op.iLike]: '%john%' } },
+            { '$user.lastName$': { [Op.iLike]: '%john%' } }
           ]
         }
       }));
@@ -136,13 +132,10 @@ describe('StudentController', () => {
     });
   });
   
-  describe('getStudentById', () => {
-    it('should return student by id', async () => {
+  describe('getStudentById', () => {    it('should return student by id', async () => {
       const mockStudent = { 
         id: 1, 
-        firstName: 'John', 
-        lastName: 'Doe', 
-        userAccount: { username: 'johndoe', email: 'john@example.com' } 
+        user: { firstName: 'John', lastName: 'Doe', username: 'johndoe', email: 'john@example.com' } 
       };
       
       (Student.findByPk as jest.Mock).mockResolvedValue(mockStudent);
@@ -154,13 +147,12 @@ describe('StudentController', () => {
       };
       
       await StudentController.getStudentById(mockRequest as any, mockResponse as Response);
-      
-      expect(Student.findByPk).toHaveBeenCalledWith('1', {
+        expect(Student.findByPk).toHaveBeenCalledWith('1', {
         include: [
           {
             model: User,
-            as: 'userAccount',
-            attributes: ['username', 'email', 'role']
+            as: 'user',
+            attributes: ['username', 'email', 'role', 'firstName', 'lastName']
           }
         ]
       });
@@ -208,10 +200,9 @@ describe('StudentController', () => {
     });
   });
   
-  describe('createStudent', () => {
-    it('should create student successfully', async () => {
-      const mockUser = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'student' };
-      const mockStudent = { id: 1, userId: 1, firstName: 'John', lastName: 'Doe' };
+  describe('createStudent', () => {    it('should create student successfully', async () => {
+      const mockUser = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'student', firstName: 'John', lastName: 'Doe' };
+      const mockStudent = { id: 1, userId: 1, birthDate: '1990-01-01' };
       
       (User.create as jest.Mock).mockResolvedValue(mockUser);
       (Student.create as jest.Mock).mockResolvedValue(mockStudent);
@@ -228,18 +219,17 @@ describe('StudentController', () => {
       };
       
       await StudentController.createStudent(mockRequest as any, mockResponse as Response);
-      
-      expect(User.create).toHaveBeenCalledWith({
+        expect(User.create).toHaveBeenCalledWith({
         username: 'johndoe',
         email: 'john@example.com',
         password: 'password123',
-        role: 'student'
+        role: 'student',
+        firstName: 'John',
+        lastName: 'Doe'
       });
       
       expect(Student.create).toHaveBeenCalledWith({
         userId: 1,
-        firstName: 'John',
-        lastName: 'Doe',
         birthDate: expect.any(Date)
       });
       
@@ -275,39 +265,45 @@ describe('StudentController', () => {
     });
   });
   
-  describe('updateStudent', () => {
-    it('should update student successfully', async () => {
+  describe('updateStudent', () => {    it('should update student successfully', async () => {
       const mockStudent = { 
         id: 1, 
-        firstName: 'John', 
-        lastName: 'Doe',
+        userId: 1,
+        update: jest.fn().mockResolvedValue({ id: 1, birthDate: '1990-01-01' })
+      };
+      
+      const mockUser = {
+        id: 1,
         update: jest.fn().mockResolvedValue({ id: 1, firstName: 'Updated', lastName: 'Student' })
       };
       
       (Student.findByPk as jest.Mock).mockResolvedValue(mockStudent);
-      
-      const mockRequest = {
+      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
+        const mockRequest = {
         params: {
           id: '1'
         },
         body: {
           firstName: 'Updated',
-          lastName: 'Student'
+          lastName: 'Student',
+          birthDate: '1990-01-01'
         }
       };
       
       await StudentController.updateStudent(mockRequest as any, mockResponse as Response);
       
       expect(Student.findByPk).toHaveBeenCalledWith('1');
-      expect(mockStudent.update).toHaveBeenCalledWith({
+      expect(User.findByPk).toHaveBeenCalledWith(1);
+      expect(mockUser.update).toHaveBeenCalledWith({
         firstName: 'Updated',
-        lastName: 'Student',
-        birthDate: undefined
+        lastName: 'Student'
       });
-      
-      expect(ApiResponse.success).toHaveBeenCalledWith(
+      expect(mockStudent.update).toHaveBeenCalledWith({
+        birthDate: expect.any(Date)
+      });
+        expect(ApiResponse.success).toHaveBeenCalledWith(
         mockResponse, 
-        mockStudent, 
+        { student: mockStudent, user: mockUser }, 
         'Student updated successfully'
       );
     });

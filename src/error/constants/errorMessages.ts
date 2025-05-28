@@ -112,7 +112,6 @@ export const ErrorMessage = {
     tr: 'Geçersiz giriş.',
     en: 'Invalid input.',
   } as ErrorMessage,
-
   // İş mantığı hataları
   BUSINESS_ERROR: {
     tr: 'İş mantığı hatası.',
@@ -125,6 +124,14 @@ export const ErrorMessage = {
   RESOURCE_NOT_AVAILABLE: {
     tr: 'Kaynak mevcut değil.',
     en: 'Resource not available.',
+  } as ErrorMessage,
+  USERNAME_ALREADY_EXISTS: {
+    tr: 'Bu kullanıcı adı zaten kullanılmaktadır.',
+    en: 'This username is already in use.',
+  } as ErrorMessage,
+  EMAIL_ALREADY_EXISTS: {
+    tr: 'Bu e-posta adresi zaten kullanılmaktadır.',
+    en: 'This email address is already in use.',
   } as ErrorMessage,
 
   // Güvenlik hataları

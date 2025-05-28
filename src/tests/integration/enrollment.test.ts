@@ -27,21 +27,19 @@ describe('Enrollment Integration Tests', () => {
     });
     
     adminToken = generateAccessToken(adminUser);
-    
-    // Test öğrencisi oluştur
+      // Test öğrencisi oluştur
     const studentUser = await User.create({
       username: 'enrollstudent',
+      firstName: 'Enroll',
+      lastName: 'Student',
       email: 'enrollstudent@example.com',
       password: 'Password123!',
       role: 'student'
     });
     
     studentToken = generateAccessToken(studentUser);
-    
-    const student = await Student.create({
+      const student = await Student.create({
       userId: studentUser.id,
-      firstName: 'Enroll',
-      lastName: 'Student',
       birthDate: new Date('1995-05-15')
     });
     

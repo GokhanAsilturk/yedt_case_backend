@@ -64,12 +64,9 @@ Authorization: Bearer <token>
 ```json
 {
   "success": true,
-  "data": [
-    {
+  "data": [    {
       "id": "550e8400-e29b-41d4-a716-446655440002",
       "userId": "550e8400-e29b-41d4-a716-446655440001",
-      "firstName": "Gökhan",
-      "lastName": "Aşiltürk",
       "birthDate": "1995-05-15",
       "createdAt": "2024-01-15T10:30:00.000Z",
       "updatedAt": "2024-01-15T10:30:00.000Z",
@@ -77,7 +74,9 @@ Authorization: Bearer <token>
         "id": "550e8400-e29b-41d4-a716-446655440001",
         "username": "gokhanasilturk",
         "email": "gokhan@example.com",
-        "role": "student"
+        "role": "student",
+        "firstName": "Gökhan",
+        "lastName": "Aşiltürk"
       }
     }
   ],
@@ -126,15 +125,20 @@ Authorization: Bearer <token>
 ```json
 {
   "success": true,
-  "message": "Success",
-  "data": {
+  "message": "Success",  "data": {
     "id": "550e8400-e29b-41d4-a716-446655440002",
     "userId": "550e8400-e29b-41d4-a716-446655440001",
-    "firstName": "Gökhan",
-    "lastName": "Aşiltürk",
     "birthDate": "1995-05-15",
     "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T10:30:00.000Z"
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "User": {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "username": "gokhanasilturk",
+      "email": "gokhan@example.com",
+      "role": "student",
+      "firstName": "Gökhan",
+      "lastName": "Asiltürk"
+    }
   }
 }
 ```
@@ -185,12 +189,9 @@ Authorization: Bearer <token>
 {
   "success": true,
   "message": "Success",
-  "data": {
-    "student": {
+  "data": {    "student": {
       "id": "550e8400-e29b-41d4-a716-446655440003",
       "userId": "550e8400-e29b-41d4-a716-446655440004",
-      "firstName": "Ahmet",
-      "lastName": "Yılmaz",
       "birthDate": "1998-03-20",
       "createdAt": "2024-01-15T11:30:00.000Z",
       "updatedAt": "2024-01-15T11:30:00.000Z"
@@ -199,7 +200,9 @@ Authorization: Bearer <token>
       "id": "550e8400-e29b-41d4-a716-446655440004",
       "username": "ahmetyilmaz",
       "email": "ahmet@example.com",
-      "role": "student"
+      "role": "student",
+      "firstName": "Ahmet",
+      "lastName": "Yılmaz"
     }
   }
 }
@@ -255,13 +258,21 @@ Authorization: Bearer <token>
   "success": true,
   "message": "Success",
   "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440002",
-    "userId": "550e8400-e29b-41d4-a716-446655440001",
-    "firstName": "Gökhan Güncel",
-    "lastName": "Aşiltürk",
-    "birthDate": "1995-05-15",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T12:45:00.000Z"
+    "student": {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "birthDate": "1995-05-15",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T12:45:00.000Z"
+    },
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "firstName": "Gökhan Güncel",
+      "lastName": "Asiltürk",
+      "username": "gokhanasilturk",
+      "email": "gokhanasilturkk@hotmail.com",
+      "role": "student"
+    }
   }
 }
 ```
@@ -382,8 +393,6 @@ Authorization: Bearer <token>
 {
   "id": "uuid",
   "userId": "uuid",
-  "firstName": "string",
-  "lastName": "string",
   "birthDate": "date",
   "createdAt": "datetime",
   "updatedAt": "datetime"
@@ -396,6 +405,8 @@ Authorization: Bearer <token>
   "id": "uuid",
   "username": "string",
   "email": "string",
+  "firstName": "string",
+  "lastName": "string",
   "role": "student|admin",
   "createdAt": "datetime",
   "updatedAt": "datetime"

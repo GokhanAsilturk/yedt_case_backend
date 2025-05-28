@@ -21,6 +21,8 @@ describe('Student Integration Tests', () => {
         // Admin kullanıcı oluştur
         const adminUser = await User_1.default.create({
             username: 'adminuser',
+            firstName: 'Admin',
+            lastName: 'User',
             email: 'admin@example.com',
             password: 'Password123!',
             role: 'admin'
@@ -32,14 +34,14 @@ describe('Student Integration Tests', () => {
         // Her test öncesi test öğrencisini oluştur
         const user = await User_1.default.create({
             username: 'teststudent',
+            firstName: 'Test',
+            lastName: 'Student',
             email: 'student@example.com',
             password: 'Password123!',
             role: 'student'
         });
         const student = await Student_1.default.create({
             userId: user.id,
-            firstName: 'Test',
-            lastName: 'Student',
             birthDate: new Date('1995-05-15')
         });
         testStudentId = student.id;
@@ -74,7 +76,7 @@ describe('Student Integration Tests', () => {
             expect(response.body.success).toBe(true);
             expect(response.body.data).toBeInstanceOf(Array);
             expect(response.body.data.length).toBeGreaterThanOrEqual(1);
-            expect(response.body.data[0].firstName).toBe('Test');
+            expect(response.body.data[0].user.firstName).toBe('Test');
         });
         it('should return empty array when no students match search', async () => {
             const response = await (0, supertest_1.default)(app_1.default)
@@ -118,9 +120,9 @@ describe('Student Integration Tests', () => {
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.data.id).toBe(testStudentId);
-            expect(response.body.data.firstName).toBe('Test');
-            expect(response.body.data.lastName).toBe('Student');
-            expect(response.body.data.userAccount).toBeDefined();
+            expect(response.body.data.user.firstName).toBe('Test');
+            expect(response.body.data.user.lastName).toBe('Student');
+            expect(response.body.data.user).toBeDefined();
         });
         it('should return 404 for non-existent student ID', async () => {
             const response = await (0, supertest_1.default)(app_1.default)
@@ -149,8 +151,8 @@ describe('Student Integration Tests', () => {
             expect(response.body.success).toBe(true);
             expect(response.body.data.student).toBeDefined();
             expect(response.body.data.user).toBeDefined();
-            expect(response.body.data.student.firstName).toBe('New');
-            expect(response.body.data.student.lastName).toBe('Student');
+            expect(response.body.data.user.firstName).toBe('New');
+            expect(response.body.data.user.lastName).toBe('Student');
             expect(response.body.data.user.username).toBe('newstudent');
             expect(response.body.data.user.email).toBe('new@example.com');
             expect(response.body.data.user.role).toBe('student');
@@ -189,6 +191,7 @@ describe('Student Integration Tests', () => {
     });
     describe('PUT /api/students/:id', () => {
         it('should update an existing student', async () => {
+            var _a, _b;
             const updateData = {
                 firstName: 'Updated',
                 lastName: 'Name'
@@ -199,12 +202,20 @@ describe('Student Integration Tests', () => {
                 .send(updateData);
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
-            expect(response.body.data.firstName).toBe('Updated');
-            expect(response.body.data.lastName).toBe('Name');
-            // Veritabanında da güncellendiğinden emin ol
-            const updatedStudent = await Student_1.default.findByPk(testStudentId);
-            expect(updatedStudent === null || updatedStudent === void 0 ? void 0 : updatedStudent.firstName).toBe('Updated');
-            expect(updatedStudent === null || updatedStudent === void 0 ? void 0 : updatedStudent.lastName).toBe('Name');
+            expect(response.body.data.user.firstName).toBe('Updated');
+            expect(response.body.data.user.lastName).toBe('Name');
+            // Veritabanında da güncellendiğinden emin ol - User tablosundan kontrol et
+            const updatedStudent = await Student_1.default.findByPk(testStudentId, {
+                include: [
+                    {
+                        model: User_1.default,
+                        as: 'user',
+                        attributes: ['firstName', 'lastName']
+                    }
+                ]
+            });
+            expect((_a = updatedStudent === null || updatedStudent === void 0 ? void 0 : updatedStudent.user) === null || _a === void 0 ? void 0 : _a.firstName).toBe('Updated');
+            expect((_b = updatedStudent === null || updatedStudent === void 0 ? void 0 : updatedStudent.user) === null || _b === void 0 ? void 0 : _b.lastName).toBe('Name');
         });
         it('should return 404 when updating non-existent student', async () => {
             const updateData = {

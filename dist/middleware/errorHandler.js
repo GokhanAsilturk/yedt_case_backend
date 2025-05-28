@@ -11,13 +11,11 @@ const errorCodes_1 = require("../error/constants/errorCodes");
 const httpStatusCodes_1 = require("../error/constants/httpStatusCodes");
 const apiResponse_1 = __importDefault(require("../utils/apiResponse"));
 const ErrorLogService_1 = require("../error/services/ErrorLogService");
-// 404 Hatası için middleware
 const notFoundHandler = (req, res, next) => {
     const err = new BaseError_1.BaseError(errorCodes_1.ErrorCode.NOT_FOUND, `${req.originalUrl} yolu bulunamadı`, 'error', httpStatusCodes_1.HttpStatusCode.NOT_FOUND);
     next(err);
 };
 exports.notFoundHandler = notFoundHandler;
-// Global hata yakalama middleware'i
 const errorHandler = async (err, req, res, next) => {
     const errorLogService = new ErrorLogService_1.ErrorLogService();
     if (!(err instanceof BaseError_1.BaseError)) {
@@ -37,10 +35,9 @@ const errorHandler = async (err, req, res, next) => {
         errorDetails = { code: err.errorCode };
     }
     if (process.env.NODE_ENV === 'production') {
-        message = 'Internal Server Error'; // Üretimde daha genel bir mesaj
-        errorDetails = undefined; // Üretimde hata detaylarını gizle
+        message = 'Internal Server Error';
+        errorDetails = undefined;
     }
-    // instanceof kontrolü yaptığımız için statusCode'u güvenli bir şekilde alabiliriz
     const statusCode = err instanceof BaseError_1.BaseError ? err.statusCode : httpStatusCodes_1.HttpStatusCode.INTERNAL_SERVER_ERROR;
     return apiResponse_1.default.error(res, message, statusCode, errorDetails);
 };

@@ -47,7 +47,6 @@ const errorHandler_1 = require("../../middleware/errorHandler");
 const errorCodes_1 = require("../../error/constants/errorCodes");
 const httpStatusCodes_1 = require("../../error/constants/httpStatusCodes");
 const errorUtils = __importStar(require("../../error/utils/errorUtils"));
-// errorHandler için mock fonksiyon
 jest.mock('../../error/services/ErrorLogService', () => {
     return {
         ErrorLogService: jest.fn().mockImplementation(() => {

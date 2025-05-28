@@ -41,10 +41,10 @@ exports.invalidateToken = exports.refreshAccessToken = exports.verifyToken = exp
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
 // JWT yapılandırması
-const JWT_SECRET = (_a = process.env.JWT_SECRET) !== null && _a !== void 0 ? _a : 'your-default-secret';
-const JWT_EXPIRES_IN = (_b = process.env.JWT_EXPIRES_IN) !== null && _b !== void 0 ? _b : '1h'; // Access token için daha kısa süre
-const JWT_REFRESH_EXPIRES_IN = (_c = process.env.JWT_REFRESH_EXPIRES_IN) !== null && _c !== void 0 ? _c : '7d'; // Refresh token için daha uzun süre
-// Blacklist - geçersiz tokenlar için, gerçek uygulamada Redis veya DB kullanılmalı
+const JWT_SECRET = (_a = process.env.JWT_SECRET) !== null && _a !== void 0 ? _a : 'asdasdasdas';
+const JWT_EXPIRES_IN = (_b = process.env.JWT_EXPIRES_IN) !== null && _b !== void 0 ? _b : '1h';
+const JWT_REFRESH_EXPIRES_IN = (_c = process.env.JWT_REFRESH_EXPIRES_IN) !== null && _c !== void 0 ? _c : '7d';
+// Blacklist - geçersiz tokenlar için, gerçek uygulamada Redis veya DB kullanılmalı.
 const invalidatedTokens = new Set();
 /**
  * Kullanıcı için access token oluşturur
@@ -62,9 +62,9 @@ const generateAccessToken = (user) => {
     };
     return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
-        algorithm: 'HS256', // Algoritma belirtme
-        audience: 'yedt-eğitim-sistemi', // İzleyici (hedef uygulama)
-        issuer: 'yedt-backend-api' // Yayınlayan (kaynak uygulama)
+        algorithm: 'HS256',
+        audience: 'yedt-eğitim-sistemi',
+        issuer: 'yedt-backend-api'
     });
 };
 exports.generateAccessToken = generateAccessToken;

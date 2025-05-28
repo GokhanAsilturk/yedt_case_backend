@@ -7,6 +7,8 @@ interface CreateTestUserOptions {
   role?: 'admin' | 'student';
   email?: string;
   username?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export const createTestUser = async (options: CreateTestUserOptions = {}) => {
@@ -19,7 +21,9 @@ export const createTestUser = async (options: CreateTestUserOptions = {}) => {
     email: options.email ?? defaultEmail,
     username: options.username ?? defaultUsername,
     password: '123456',
-    role: options.role ?? 'student'
+    role: options.role ?? 'student',
+    firstName: options.firstName ?? 'Test',
+    lastName: options.lastName ?? 'User'
   });
 
   return user;

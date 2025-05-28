@@ -118,6 +118,8 @@ class AuthController {
       const safeUser = {
         userId: user.id,
         username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role
       };
@@ -151,21 +153,21 @@ class AuthController {
 
       if (!isValidPassword) {
         throw new AppError(ErrorMessage.INVALID_CREDENTIALS.tr, 401, ErrorCode.UNAUTHORIZED);
-      }
-
-      // Öğrenci kaydını bul
+      }      // Öğrenci kaydını bul
       const student = await Student.findOne({ where: { userId: user.id } });
       
       if (!student) {
         throw new AppError('Öğrenci kaydı bulunamadı', 404, ErrorCode.NOT_FOUND);
-      }      const { accessToken, refreshToken } = generateTokenPair(user);      
+      }
+      
+      const { accessToken, refreshToken } = generateTokenPair(user);      
       
       const responseData = {
         user: {
           id: student.id,
           userId: user.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
+          firstName: user.firstName,
+          lastName: user.lastName,
           username: user.username,
           email: user.email,
           role: user.role

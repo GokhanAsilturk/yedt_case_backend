@@ -31,6 +31,8 @@ describe('Enrollment Integration Tests', () => {
         // Test öğrencisi oluştur
         const studentUser = await User_1.default.create({
             username: 'enrollstudent',
+            firstName: 'Enroll',
+            lastName: 'Student',
             email: 'enrollstudent@example.com',
             password: 'Password123!',
             role: 'student'
@@ -38,8 +40,6 @@ describe('Enrollment Integration Tests', () => {
         studentToken = (0, jwt_1.generateAccessToken)(studentUser);
         const student = await Student_1.default.create({
             userId: studentUser.id,
-            firstName: 'Enroll',
-            lastName: 'Student',
             birthDate: new Date('1995-05-15')
         });
         studentId = student.id;
