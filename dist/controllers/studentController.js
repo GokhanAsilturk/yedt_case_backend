@@ -42,15 +42,18 @@ const StudentController = {
             });
             apiResponse_1.default.pagination(res, students, page, limit, count);
         }
-        catch (error) {
+        catch (err) { // Değişiklik: error -> err, tip kontrolü eklendi
             if (next) {
-                next(error);
+                next(err);
             }
-            else if (error instanceof AppError_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            else if (err instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, err.message, err.statusCode, { code: err.errorCode });
+            }
+            else if (err instanceof Error) {
+                apiResponse_1.default.error(res, err.message, 500);
             }
             else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500);
+                apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500);
             }
         }
     },
@@ -74,21 +77,33 @@ const StudentController = {
             }
             apiResponse_1.default.success(res, student);
         }
-        catch (error) {
+        catch (err) { // Değişiklik: error -> err, tip kontrolü eklendi
             if (next) {
-                next(error);
+                next(err);
             }
-            else if (error instanceof AppError_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            else if (err instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, err.message, err.statusCode, { code: err.errorCode });
             }
-            else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci bilgileri alınırken bir hata oluştu', 500);
+            else if (err instanceof Error) { // Değişiklik: err'in Error tipinde olup olmadığı kontrol ediliyor
+                apiResponse_1.default.error(res, err.message, 500);
+            }
+            else { // Değişiklik: Bilinmeyen hatalar için özel mesaj korunuyor
+                apiResponse_1.default.error(res, 'Öğrenci bilgileri alınırken bir hata oluştu', 500);
             }
         }
     },
     createStudent: async (req, res, next) => {
         try {
             const { username, email, password, firstName, lastName, birthDate } = req.body;
+            // Önce kullanıcı adı ve e-posta adresinin benzersiz olup olmadığını kontrol et
+            const existingUsername = await User_1.default.findOne({ where: { username } });
+            if (existingUsername) {
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, errorCodes_1.ErrorCode.USERNAME_ALREADY_EXISTS);
+            }
+            const existingEmail = await User_1.default.findOne({ where: { email } });
+            if (existingEmail) {
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.EMAIL_ALREADY_EXISTS.tr, 409, errorCodes_1.ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
             const user = await User_1.default.create({
                 username,
                 firstName,
@@ -99,25 +114,42 @@ const StudentController = {
             });
             const student = await Student_1.default.create({
                 userId: user.id,
-                birthDate: new Date(birthDate),
-                birthday: birthDate
+                birthDate: new Date(birthDate)
             });
             apiResponse_1.default.success(res, { user, student }, 'Student created successfully', 201);
         }
-        catch (error) {
+        catch (err) { // Değişiklik: error -> err, tip kontrolü eklendi
             if (next) {
-                next(error);
+                next(err);
             }
-            else if (error instanceof AppError_1.AppError) {
-                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            else if (err instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, err.message, err.statusCode, { code: err.errorCode });
             }
-            else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci oluşturulurken bir hata oluştu', 500);
+            else if (err instanceof Error) { // Değişiklik: err'in Error tipinde olup olmadığı kontrol ediliyor ve S6660 uyarısı gideriliyor
+                // Sequelize hata mesajlarını daha anlaşılır hale getir
+                if (err.message.includes('Duplicate entry') || err.message.includes('tekil kısıtlaması') || err.message.includes('unique constraint')) {
+                    if (err.message.toLowerCase().includes('username') || err.message.toLowerCase().includes('users_username')) {
+                        apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, { code: errorCodes_1.ErrorCode.USERNAME_ALREADY_EXISTS });
+                    }
+                    else if (err.message.toLowerCase().includes('email') || err.message.toLowerCase().includes('users_email')) {
+                        apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.EMAIL_ALREADY_EXISTS.tr, 409, { code: errorCodes_1.ErrorCode.EMAIL_ALREADY_EXISTS });
+                    }
+                    else {
+                        apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.CONFLICT.tr, 409, { code: errorCodes_1.ErrorCode.CONFLICT });
+                    }
+                }
+                else {
+                    // Orijinal mantığa uygun olarak, belirli olmayan Error örnekleri için genel hata
+                    apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500, { code: errorCodes_1.ErrorCode.INTERNAL_SERVER_ERROR });
+                }
+            }
+            else { // Değişiklik: Bilinmeyen hatalar için genel mesaj
+                apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.GENERIC_ERROR.tr, 500, { code: errorCodes_1.ErrorCode.INTERNAL_SERVER_ERROR });
             }
         }
     }, updateStudent: async (req, res, next) => {
         try {
-            const { firstName, lastName, username, birthDate, birthday } = req.body;
+            const { firstName, lastName, username, birthDate } = req.body;
             const student = await Student_1.default.findByPk(req.params.id, {
                 include: [
                     {
@@ -130,6 +162,20 @@ const StudentController = {
             if (!student) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
+            // Kullanıcı adının benzersiz olup olmadığını kontrol et
+            if (username) {
+                const existingUsername = await User_1.default.findOne({
+                    where: {
+                        username,
+                        id: {
+                            [sequelize_1.Op.ne]: student.userId
+                        }
+                    }
+                });
+                if (existingUsername) {
+                    throw new AppError_1.AppError(errorMessages_1.ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, errorCodes_1.ErrorCode.USERNAME_ALREADY_EXISTS);
+                }
+            }
             // User tablosunu güncelle
             if (firstName || lastName || username) {
                 await User_1.default.update({
@@ -137,11 +183,10 @@ const StudentController = {
                     ...(lastName && { lastName }),
                     ...(username && { username: username })
                 }, { where: { id: student.userId } });
-            } // Student tablosunu güncelle
-            if (birthDate || birthday) {
+            }
+            if (birthDate) {
                 await student.update({
-                    ...(birthDate && { birthDate: new Date(birthDate) }),
-                    ...(birthday && { birthday })
+                    birthDate: new Date(birthDate)
                 });
             }
             // Güncellenmiş student'ı include ile geri döndür
@@ -163,8 +208,19 @@ const StudentController = {
             else if (error instanceof AppError_1.AppError) {
                 apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
             }
+            else if (error instanceof Error && (error.message.includes('Duplicate entry') || error.message.includes('tekil kısıtlaması') || error.message.includes('unique constraint'))) {
+                if (error.message.toLowerCase().includes('username') || error.message.toLowerCase().includes('users_username')) {
+                    apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.USERNAME_ALREADY_EXISTS.tr, 409, { code: errorCodes_1.ErrorCode.USERNAME_ALREADY_EXISTS });
+                }
+                else if (error.message.toLowerCase().includes('email') || error.message.toLowerCase().includes('users_email')) {
+                    apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.EMAIL_ALREADY_EXISTS.tr, 409, { code: errorCodes_1.ErrorCode.EMAIL_ALREADY_EXISTS });
+                }
+                else {
+                    apiResponse_1.default.error(res, errorMessages_1.ErrorMessage.CONFLICT.tr, 409, { code: errorCodes_1.ErrorCode.CONFLICT });
+                }
+            }
             else {
-                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500);
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci güncellenirken bir hata oluştu', 500, { code: errorCodes_1.ErrorCode.INTERNAL_SERVER_ERROR });
             }
         }
     },
@@ -198,11 +254,10 @@ const StudentController = {
                 apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Öğrenci silinirken bir hata oluştu', 500);
             }
         }
-    },
-    updateStudentProfile: async (req, res, next) => {
+    }, updateStudentProfile: async (req, res, next) => {
         var _a;
         try {
-            const { firstName, lastName, birthDate, birthday } = req.body;
+            const { firstName, lastName, birthDate } = req.body;
             const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
             // User bilgilerini güncelle
             if (firstName || lastName) {

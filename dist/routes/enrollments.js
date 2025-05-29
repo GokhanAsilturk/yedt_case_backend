@@ -121,5 +121,25 @@ router.post('/', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentContro
  *         description: Enrollment deleted successfully
  */
 router.delete('/:id', middleware_1.auth, (0, asyncHandler_1.default)(enrollmentController_1.default.deleteEnrollment));
+/**
+ * @swagger
+ * /api/enrollments/{id}:
+ *   get:
+ *     summary: Get enrollment by ID
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Enrollment ID
+ *     responses:
+ *       200:
+ *         description: Enrollment retrieved successfully
+ */
+router.get('/:id', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0, asyncHandler_1.default)(enrollmentController_1.default.getEnrollmentById));
 exports.default = router;
 //# sourceMappingURL=enrollments.js.map

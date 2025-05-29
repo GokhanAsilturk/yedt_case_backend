@@ -31,7 +31,8 @@ const AdminController = {
                 ]
             } : {};
             const { count, rows: admins } = await Admin_1.default.findAndCountAll({
-                where: whereClause, include: [
+                where: whereClause,
+                include: [
                     {
                         model: User_1.default,
                         as: 'user',
@@ -88,7 +89,7 @@ const AdminController = {
     // Create a new admin
     createAdmin: async (req, res, next) => {
         try {
-            const { username, email, password, firstName, lastName, department, title } = req.body; // Create User first
+            const { username, email, password, firstName, lastName, department, title } = req.body;
             const user = await User_1.default.create({
                 username,
                 email,
@@ -96,13 +97,12 @@ const AdminController = {
                 role: 'admin',
                 firstName,
                 lastName
-            }); // Type assertion needed due to Sequelize typing limitations
-            // Then create Admin
+            });
             const admin = await Admin_1.default.create({
                 userId: user.id,
                 department,
                 title
-            }); // Type assertion needed due to Sequelize typing limitations
+            });
             apiResponse_1.default.success(res, { user, admin }, 'Yönetici başarıyla oluşturuldu', 201);
         }
         catch (error) {
@@ -125,13 +125,11 @@ const AdminController = {
             if (!admin) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            // Önce kullanıcı bilgilerini güncelle
             const user = await User_1.default.findByPk(admin.userId);
             await (user === null || user === void 0 ? void 0 : user.update({
                 firstName,
                 lastName
             }));
-            // Sonra admin bilgilerini güncelle
             await admin.update({
                 department,
                 title
@@ -157,11 +155,8 @@ const AdminController = {
             if (!admin) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
             }
-            // Transaction kullanarak silme işlemlerini gerçekleştir
             await database_1.sequelize.transaction(async (t) => {
-                // Önce admin'i sil
                 await admin.destroy({ transaction: t });
-                // Sonra user'ı sil
                 await User_1.default.destroy({
                     where: { id: admin.userId },
                     transaction: t

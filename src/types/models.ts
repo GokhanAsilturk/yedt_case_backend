@@ -99,7 +99,7 @@ export interface EnrollmentModel extends Model<InferAttributes<EnrollmentModel>,
   updatedAt: CreationOptional<Date>;
 }
 
-// Input types for creating new records
+
 export interface UserCreateInput {
   username: string;
   firstName: string;
@@ -128,6 +128,7 @@ export interface CourseCreateInput {
 
 export interface EnrollmentCreateInput {
   studentId: string;
+  courseId: string;
 }
 
 export interface PaginationOptions {

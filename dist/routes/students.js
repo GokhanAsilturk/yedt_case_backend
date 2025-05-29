@@ -160,7 +160,7 @@ router.post('/', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0, 
  *       404:
  *         description: Student not found
  */
-router.put('/:id', middleware_1.auth, (0, middleware_1.checkRole)(['admin']), (0, asyncHandler_1.default)(studentController_1.default.updateStudent));
+router.put('/:id', middleware_1.auth, (0, middleware_1.checkRole)(['admin', 'student']), (0, asyncHandler_1.default)(studentController_1.default.updateStudent));
 /**
  * @swagger
  * /api/students/{id}:

@@ -117,6 +117,14 @@ exports.ErrorMessage = {
         tr: 'Kaynak mevcut değil.',
         en: 'Resource not available.',
     },
+    USERNAME_ALREADY_EXISTS: {
+        tr: 'Bu kullanıcı adı zaten kullanılmaktadır.',
+        en: 'This username is already in use.',
+    },
+    EMAIL_ALREADY_EXISTS: {
+        tr: 'Bu e-posta adresi zaten kullanılmaktadır.',
+        en: 'This email address is already in use.',
+    },
     // Güvenlik hataları
     SECURITY_ERROR: {
         tr: 'Güvenlik hatası.',

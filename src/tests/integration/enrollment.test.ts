@@ -50,8 +50,10 @@ describe('Enrollment Integration Tests', () => {
       name: 'Enrollment Test Course',
       description: 'Course for enrollment tests'
     });
+      courseId = course.id;
     
-    courseId = course.id;
+    // Add a small delay to ensure all database operations are completed
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
   
   afterAll(async () => {
@@ -62,11 +64,13 @@ describe('Enrollment Integration Tests', () => {
     await User.destroy({ where: {} });
     await sequelize.close();
   });
-  
-  describe('GET /api/enrollments', () => {
+    describe('GET /api/enrollments', () => {
     beforeEach(async () => {
       // Her test öncesi enrollment oluştur
       await Enrollment.destroy({ where: {} }); // Önce temizle
+      
+      // Add delay to ensure cleanup is completed
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       const enrollment = await Enrollment.create({
         studentId,

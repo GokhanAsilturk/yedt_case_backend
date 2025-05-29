@@ -31,13 +31,11 @@ const options = {
             },
         },
     },
-    apis: ['./src/routes/*.ts', './src/controllers/*.ts', './src/utils/*.ts'], // Path to the API routes, controllers and utils
+    apis: ['./src/routes/*.ts', './src/controllers/*.ts', './src/utils/*.ts'],
 };
 const swaggerSpec = (0, swagger_jsdoc_1.default)(options);
 const setupSwagger = (app) => {
-    // Swagger UI endpoint
     app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerSpec));
-    // Swagger JSON endpoint
     app.get('/swagger.json', (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(swaggerSpec);

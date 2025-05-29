@@ -44,9 +44,6 @@ const AppError_1 = require("../error/models/AppError");
 const errorCodes_1 = require("../error/constants/errorCodes");
 const errorMessages_1 = require("../error/constants/errorMessages");
 class AuthController {
-    /**
-     * Refresh token kullanarak yeni bir access token oluşturur
-     */
     static async refreshToken(req, res, next) {
         try {
             const { refreshToken } = req.body;
@@ -71,23 +68,17 @@ class AuthController {
             }
         }
     }
-    /**
-     * Kullanıcı çıkışını yapar ve tokenları geçersiz kılar
-     */
     static async logout(req, res, next) {
         var _a, _b;
         try {
-            // Access token'ı geçersiz kıl (eğer varsa)
             const accessToken = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.replace('Bearer ', '');
             if (accessToken) {
                 (0, jwt_1.invalidateToken)(accessToken);
             }
-            // Refresh token'ı geçersiz kıl (eğer varsa)
             const { refreshToken } = req.body;
             if (refreshToken) {
                 (0, jwt_1.invalidateToken)(refreshToken);
             }
-            // Kullanıcının token sürümünü artır (varsa)
             if ((_b = req.user) === null || _b === void 0 ? void 0 : _b.id) {
                 await User_1.default.update({ tokenVersion: User_1.default.sequelize.literal('tokenVersion + 1') }, { where: { id: req.user.id } });
             }
@@ -153,7 +144,7 @@ class AuthController {
             const isValidPassword = await user.validatePassword(password);
             if (!isValidPassword) {
                 throw new AppError_1.AppError(errorMessages_1.ErrorMessage.INVALID_CREDENTIALS.tr, 401, errorCodes_1.ErrorCode.UNAUTHORIZED);
-            } // Öğrenci kaydını bul
+            }
             const student = await Student_1.default.findOne({ where: { userId: user.id } });
             if (!student) {
                 throw new AppError_1.AppError('Öğrenci kaydı bulunamadı', 404, errorCodes_1.ErrorCode.NOT_FOUND);
@@ -172,7 +163,6 @@ class AuthController {
                 accessToken,
                 refreshToken
             };
-            // ApiResponse kullanarak yanıtı gönderelim
             apiResponse_1.default.success(res, responseData);
         }
         catch (error) {

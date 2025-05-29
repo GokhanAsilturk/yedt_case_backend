@@ -126,6 +126,44 @@ router.post('/',
 /**
  * @swagger
  * /api/enrollments/{id}:
+ *   put:
+ *     summary: Update enrollment
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Enrollment ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               studentId:
+ *                 type: string
+ *               courseId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Enrollment updated successfully
+ *       404:
+ *         description: Enrollment not found
+ */
+router.put('/:id',
+  auth,
+  checkRole(['admin']),
+  asyncHandler(EnrollmentController.updateEnrollment)
+);
+
+/**
+ * @swagger
+ * /api/enrollments/{id}:
  *   delete:
  *     summary: Delete enrollment
  *     tags: [Enrollments]
@@ -145,6 +183,31 @@ router.post('/',
 router.delete('/:id',
   auth,
   asyncHandler(EnrollmentController.deleteEnrollment)
+);
+
+/**
+ * @swagger
+ * /api/enrollments/{id}:
+ *   get:
+ *     summary: Get enrollment by ID
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Enrollment ID
+ *     responses:
+ *       200:
+ *         description: Enrollment retrieved successfully
+ */
+router.get('/:id',
+  auth,
+  checkRole(['admin']),
+  asyncHandler(EnrollmentController.getEnrollmentById)
 );
 
 export default router;

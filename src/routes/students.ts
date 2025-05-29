@@ -173,7 +173,7 @@ router.post('/',
  */
 router.put('/:id',
   auth,
-  checkRole(['admin']),
+  checkRole(['admin', 'student']),
   asyncHandler(StudentController.updateStudent)
 );
 

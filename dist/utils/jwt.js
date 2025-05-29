@@ -40,11 +40,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.invalidateToken = exports.refreshAccessToken = exports.verifyToken = exports.generateTokenPair = exports.generateRefreshToken = exports.generateAccessToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-// JWT yapılandırması
 const JWT_SECRET = (_a = process.env.JWT_SECRET) !== null && _a !== void 0 ? _a : 'asdasdasdas';
 const JWT_EXPIRES_IN = (_b = process.env.JWT_EXPIRES_IN) !== null && _b !== void 0 ? _b : '1h';
 const JWT_REFRESH_EXPIRES_IN = (_c = process.env.JWT_REFRESH_EXPIRES_IN) !== null && _c !== void 0 ? _c : '7d';
-// Blacklist - geçersiz tokenlar için, gerçek uygulamada Redis veya DB kullanılmalı.
+// Prod ortamında Redis/DB kullanılmalı
 const invalidatedTokens = new Set();
 /**
  * Kullanıcı için access token oluşturur
@@ -110,12 +109,11 @@ exports.generateTokenPair = generateTokenPair;
 const verifyToken = (token) => {
     try {
         const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
-            algorithms: ['HS256'], // Sadece bu algoritma ile imzalanmış tokenları kabul et
+            algorithms: ['HS256'],
             audience: 'yedt-eğitim-sistemi',
             issuer: 'yedt-backend-api',
-            complete: true // Header, payload ve signature dahil tam token bilgisini al
+            complete: true
         });
-        // Token blacklist'te mi kontrol et
         if (decoded.jti && invalidatedTokens.has(decoded.jti)) {
             throw new Error('Token has been invalidated');
         }
@@ -145,16 +143,11 @@ exports.verifyToken = verifyToken;
 const refreshAccessToken = async (refreshToken) => {
     try {
         const decoded = (0, exports.verifyToken)(refreshToken);
-        // Kullanıcı kimliğini doğrula
         const user = await Promise.resolve().then(() => __importStar(require('../models/User'))).then(m => m.default.findByPk(decoded.id));
-        if (!user) {
+        if (!user)
             return null;
-        }
-        // Token sürümünü kontrol et (kullanıcı çıkış yaptığında değişir)
-        if (decoded.tokenVersion !== user.tokenVersion) {
+        if (decoded.tokenVersion !== user.tokenVersion)
             return null;
-        }
-        // Yeni access token oluştur
         return (0, exports.generateAccessToken)(user);
     }
     catch (error) {

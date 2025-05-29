@@ -220,9 +220,7 @@ const EnrollmentController = {
             }
         }
     },
-    // Delete an enrollment
-    deleteEnrollment: async (req, // Use TypedRequest with IdParams
-    res, next) => {
+    deleteEnrollment: async (req, res, next) => {
         try {
             const enrollment = await Enrollment_1.default.findByPk(req.params.id);
             if (!enrollment) {
@@ -240,6 +238,32 @@ const EnrollmentController = {
             }
             else {
                 apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt silinirken bir hata oluştu', 500);
+            }
+        }
+    },
+    getEnrollmentById: async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const enrollment = await Enrollment_1.default.findByPk(id, {
+                include: [
+                    { model: Student_1.default, as: 'student' },
+                    { model: Course_1.default, as: 'course' }
+                ]
+            });
+            if (!enrollment) {
+                throw new AppError_1.AppError(errorMessages_1.ErrorMessage.NOT_FOUND.tr, 404, errorCodes_1.ErrorCode.NOT_FOUND);
+            }
+            apiResponse_1.default.success(res, enrollment, 'Kayıt başarıyla getirildi');
+        }
+        catch (error) {
+            if (next) {
+                next(error);
+            }
+            else if (error instanceof AppError_1.AppError) {
+                apiResponse_1.default.error(res, error.message, error.statusCode, { code: error.errorCode });
+            }
+            else {
+                apiResponse_1.default.error(res, error instanceof Error ? error.message : 'Kayıt getirilirken bir hata oluştu', 500);
             }
         }
     }
